@@ -1,73 +1,68 @@
-# React + TypeScript + Vite
+# Controle Financeiro
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+App pessoal de controle financeiro baseado em extratos OFX exportados do Nubank.
 
-Currently, two official plugins are available:
+## Funcionalidades
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Dashboard** — visão geral de receitas, despesas e saldo por período
+- **Transações** — listagem, filtros e categorização manual de lançamentos
+- **Categorias** — criação e gestão de categorias personalizadas
+- **Investimentos** — acompanhamento de aplicações/resgates RDB
+- **Importação** — upload de arquivos OFX (conta corrente e cartão de crédito)
+- **Configurações** — nomes de transferências internas, temas e preferências
 
-## React Compiler
+Os dados ficam armazenados localmente no navegador via IndexedDB — nenhuma informação é enviada para servidores externos.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Stack
 
-## Expanding the ESLint configuration
+| Camada | Tecnologia |
+|--------|-----------|
+| Framework | React 19 + TypeScript 5.8 |
+| Build | Vite 5 |
+| Estilo | Tailwind CSS v4 + shadcn/ui |
+| Estado | Zustand 5 |
+| Persistência | IndexedDB (idb) |
+| Gráficos | Recharts 2 |
+| Datas | date-fns 4 |
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Pré-requisitos
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- Node.js >= 22.11
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## Instalação
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Desenvolvimento
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm run dev
 ```
+
+Acesse `http://localhost:5173`.
+
+## Build
+
+```bash
+npm run build
+```
+
+## Como usar
+
+1. Exporte o extrato da sua conta corrente e/ou cartão de crédito no Nubank (formato OFX)
+2. Acesse a página **Importar** e faça o upload dos arquivos
+3. As transações serão importadas e categorizadas automaticamente segundo as regras configuradas
+4. Use a página **Transações** para ajustar categorias manualmente
+5. Acompanhe os relatórios no **Dashboard**
+
+## Regras de categorização automática
+
+| Descrição da transação | Categoria |
+|------------------------|-----------|
+| Aplicação/Resgate RDB | Investimento (neutro) |
+| Pagamento de fatura | Pagamento de cartão (neutro) |
+| Pagamento recebido (cartão) | Pagamento de cartão (neutro) |
+| Reembolso / estorno | Cancelado (neutro) |
+| Transferências internas | Configurável em Ajustes |
