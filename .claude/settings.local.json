@@ -22,7 +22,16 @@
       "Bash(node -e \"const e=require\\('./node_modules/es-toolkit/package.json'\\); const exp=e.exports; const k='./compat/sortBy'; console.log\\(JSON.stringify\\(exp[k] || 'NOT FOUND'\\)\\)\")",
       "Bash(node -e \"const e=require\\('./node_modules/es-toolkit/package.json'\\); const exp=e.exports; const keys=Object.keys\\(exp\\).filter\\(k=>k.includes\\('sort'\\)\\); console.log\\(keys\\)\")",
       "Bash(node -e \"const e=require\\('./node_modules/es-toolkit/package.json'\\); console.log\\('es-toolkit:', e.version\\); const k='./compat/sortBy'; const exp=e.exports; console.log\\(JSON.stringify\\(exp[k] || 'NOT FOUND'\\)\\)\")",
-      "Bash(node -e \"const e=require\\('./node_modules/es-toolkit/package.json'\\); const exp=e.exports; const keys=Object.keys\\(exp\\).slice\\(0,30\\); console.log\\(keys.join\\('\\\\n'\\)\\)\")"
+      "Bash(node -e \"const e=require\\('./node_modules/es-toolkit/package.json'\\); const exp=e.exports; const keys=Object.keys\\(exp\\).slice\\(0,30\\); console.log\\(keys.join\\('\\\\n'\\)\\)\")",
+      "Bash(npx update-browserslist-db@latest --yes)",
+      "Bash(rm:*)",
+      "Bash(ls:*)",
+      "Bash(node node_modules/.bin/tsc --noEmit)",
+      "Bash(node_modules\\\\typescript\\\\bin\\\\tsc --noEmit)",
+      "Bash(./node_modules/.bin/tsc.cmd --noEmit)",
+      "Bash(node \"./node_modules/typescript/lib/tsc.js\" --noEmit)",
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(node \"./node_modules/vite/bin/vite.js\" build)"
     ]
   }
 }
