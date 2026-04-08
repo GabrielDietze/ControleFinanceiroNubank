@@ -3,6 +3,7 @@ export type TransactionSource = 'account' | 'credit_card'
 export type TransactionType =
   | 'income'
   | 'expense'
+  | 'reimbursement'
   | 'investment_application'
   | 'investment_withdrawal'
   | 'card_payment'
@@ -40,9 +41,17 @@ export interface CategoryRule {
   isRegex: boolean
 }
 
+export interface CategoryBudget {
+  category: string
+  limit: number // limite mensal em R$
+}
+
 export interface AppSettings {
   internalNames: string[] // CPFs/CNPJs/nomes marcados como transferência interna
   customCategoryRules: CategoryRule[]
+  customCategories: string[] // categorias adicionadas pelo usuário
+  savingsGoal: number // percentual de poupança desejado (padrão: 20)
+  budgets: CategoryBudget[] // metas mensais por categoria
 }
 
 // Resultado do parse de um arquivo OFX

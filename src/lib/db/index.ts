@@ -99,15 +99,80 @@ const SETTINGS_KEY = 'app-settings'
 const defaultSettings: AppSettings = {
   internalNames: [],
   customCategoryRules: [],
+  customCategories: [],
+  savingsGoal: 20,
+  budgets: [],
 }
 
 export async function getSettings(): Promise<AppSettings> {
   const db = await getDB()
   const record = await db.get('settings', SETTINGS_KEY)
-  return record?.data ?? defaultSettings
+  // Merge with defaults so new fields always exist, even for users com settings antigas
+  return { ...defaultSettings, ...(record?.data ?? {}) }
 }
 
 export async function saveSettings(settings: AppSettings): Promise<void> {
   const db = await getDB()
   await db.put('settings', { id: SETTINGS_KEY, data: settings })
+}
+
+// ────────────────────────── Export / Import ──────────────────────────
+
+export interface ExportData {
+  version: 1
+  exportedAt: string
+  transactions: Transaction[]
+  investments: InvestmentRecord[]
+  settings: AppSettings
+}
+
+export async function exportData(): Promise<ExportData> {
+  const [transactions, investments, settings] = await Promise.all([
+    getAllTransactions(),
+    getAllInvestments(),
+    getSettings(),
+  ])
+  return { version: 1, exportedAt: new Date().toISOString(), transactions, investments, settings }
+}
+
+export async function importData(
+  data: ExportData,
+): Promise<{ addedTransactions: number; addedInvestments: number }> {
+  const existingTxIds = await getExistingFITIDs()
+
+  const newTransactions = data.transactions.filter((t) => !existingTxIds.has(t.id))
+  const existingInvIds = new Set((await getAllInvestments()).map((i) => i.id))
+  const newInvestments = data.investments.filter((i) => !existingInvIds.has(i.id))
+
+  const db = await getDB()
+
+  if (newTransactions.length > 0) {
+    const tx = db.transaction('transactions', 'readwrite')
+    await Promise.all([...newTransactions.map((t) => tx.store.put(t)), tx.done])
+  }
+
+  if (newInvestments.length > 0) {
+    const tx = db.transaction('investments', 'readwrite')
+    await Promise.all([...newInvestments.map((i) => tx.store.put(i)), tx.done])
+  }
+
+  // Settings: merge — preserva regras locais que não estejam no arquivo
+  const currentSettings = await getSettings()
+  const mergedSettings: AppSettings = {
+    ...currentSettings,
+    internalNames: Array.from(new Set([...currentSettings.internalNames, ...(data.settings.internalNames ?? [])])),
+    customCategoryRules: [
+      ...currentSettings.customCategoryRules,
+      ...(data.settings.customCategoryRules ?? []).filter(
+        (r) => !currentSettings.customCategoryRules.find((c) => c.id === r.id),
+      ),
+    ],
+    customCategories: Array.from(new Set([
+      ...(currentSettings.customCategories ?? []),
+      ...(data.settings.customCategories ?? []),
+    ])),
+  }
+  await saveSettings(mergedSettings)
+
+  return { addedTransactions: newTransactions.length, addedInvestments: newInvestments.length }
 }

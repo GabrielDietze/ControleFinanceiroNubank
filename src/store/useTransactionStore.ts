@@ -10,6 +10,9 @@ import {
   saveSettings,
   getExistingFITIDs,
   clearAllTransactions,
+  exportData,
+  importData,
+  type ExportData,
 } from '@/lib/db'
 import { linkTransactions } from '@/lib/ofx/linker'
 
@@ -36,6 +39,10 @@ interface TransactionStore {
   // Limpa todos os dados (util para reset)
   clearAll: () => Promise<void>
 
+  // Export / Import
+  exportData: () => Promise<ExportData>
+  importData: (data: ExportData) => Promise<{ addedTransactions: number; addedInvestments: number }>
+
   // IDs existentes para dedup no preview
   existingFITIDs: () => Set<string>
 }
@@ -43,7 +50,7 @@ interface TransactionStore {
 export const useTransactionStore = create<TransactionStore>((set, get) => ({
   transactions: [],
   investments: [],
-  settings: { internalNames: [], customCategoryRules: [] },
+  settings: { internalNames: [], customCategoryRules: [], customCategories: [], savingsGoal: 20, budgets: [] },
   loaded: false,
 
   load: async () => {
@@ -127,6 +134,22 @@ export const useTransactionStore = create<TransactionStore>((set, get) => ({
   clearAll: async () => {
     await clearAllTransactions()
     set({ transactions: [], investments: [] })
+  },
+
+  exportData: async () => {
+    return exportData()
+  },
+
+  importData: async (data) => {
+    const result = await importData(data)
+    // Recarrega tudo após importar
+    const [transactions, investments, settings] = await Promise.all([
+      getAllTransactions(),
+      getAllInvestments(),
+      getSettings(),
+    ])
+    set({ transactions, investments, settings })
+    return result
   },
 
   existingFITIDs: () => new Set(get().transactions.map((t) => t.id)),

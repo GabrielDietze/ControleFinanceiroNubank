@@ -53,27 +53,35 @@ export function linkTransactions(transactions: Transaction[]): Transaction[] {
     }
   }
 
-  // 2. Detecta reembolsos/estornos no cartão
+  // 2. Vincula reembolsos/estornos no cartão à despesa original
   const cardTransactions = transactions.filter((t) => t.source === 'credit_card')
-  const credits = cardTransactions.filter(
-    (t) => t.amount > 0 && t.type !== 'card_payment',
-  )
+  const reimbursements = cardTransactions.filter((t) => t.type === 'reimbursement')
   const debits = cardTransactions.filter((t) => t.amount < 0 && t.type === 'expense')
 
-  for (const credit of credits) {
-    if (map.get(credit.id)?.status === 'cancelled') continue
+  for (const reimb of reimbursements) {
+    if (map.get(reimb.id)?.linkedId) continue
 
-    const merchant = extractMerchant(credit.memo)
+    const merchant = extractMerchant(reimb.memo)
     const matchDebit = debits.find(
       (d) =>
-        map.get(d.id)?.status !== 'cancelled' &&
         !map.get(d.id)?.linkedId &&
-        Math.abs(d.amount) === Math.abs(credit.amount) &&
+        Math.abs(d.amount) === Math.abs(reimb.amount) &&
         extractMerchant(d.memo) === merchant,
     )
     if (matchDebit) {
-      map.set(credit.id, { ...map.get(credit.id)!, status: 'cancelled', linkedId: matchDebit.id })
-      map.set(matchDebit.id, { ...map.get(matchDebit.id)!, status: 'cancelled', linkedId: credit.id })
+      // Herda a categoria da despesa original no reembolso
+      const expenseCategory = map.get(matchDebit.id)!.category
+      map.set(reimb.id, {
+        ...map.get(reimb.id)!,
+        status: 'cancelled',
+        linkedId: matchDebit.id,
+        category: expenseCategory,
+      })
+      map.set(matchDebit.id, {
+        ...map.get(matchDebit.id)!,
+        status: 'cancelled',
+        linkedId: reimb.id,
+      })
     }
   }
 

@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { parseOFX } from '@/lib/ofx/parser'
 import { classifyTransaction } from '@/lib/ofx/classifier'
 import { useTransactionStore } from '@/store/useTransactionStore'
@@ -7,17 +7,23 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { formatCurrency } from '@/lib/utils/currency'
-import { formatDate } from '@/lib/utils/date'
+import { formatDate, isoMonthOf, monthLabel } from '@/lib/utils/date'
 import { TYPE_LABELS } from '@/lib/ofx/classifier'
-import { Upload, CheckCircle, AlertCircle, FileText } from 'lucide-react'
+import { Upload, CheckCircle, AlertCircle, FileText, CalendarDays } from 'lucide-react'
 import { toast } from 'sonner'
 
 export default function ImportPage() {
-  const { importTransactions, existingFITIDs, settings } = useTransactionStore()
+  const { importTransactions, existingFITIDs, settings, transactions } = useTransactionStore()
   const [previewing, setPreviewing] = useState<ImportPreviewItem[] | null>(null)
   const [fileInfo, setFileInfo] = useState<{ name: string; type: string } | null>(null)
   const [dragging, setDragging] = useState(false)
   const [importing, setImporting] = useState(false)
+
+  const importedMonths = useMemo(() => {
+    const set = new Set<string>()
+    transactions.forEach((t) => set.add(isoMonthOf(t.date)))
+    return Array.from(set).sort().reverse()
+  }, [transactions])
 
   const processFile = useCallback(
     (file: File) => {
@@ -103,6 +109,24 @@ export default function ImportPage() {
           Arraste ou selecione um arquivo .ofx exportado do Nubank (conta corrente ou cartão).
         </p>
       </div>
+
+      {importedMonths.length > 0 && (
+        <Card>
+          <CardContent className="py-3 px-4">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+              <CalendarDays size={14} />
+              <span className="font-medium text-foreground">Meses já importados</span>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {importedMonths.map((m) => (
+                <Badge key={m} variant="secondary" className="text-xs">
+                  {monthLabel(m)}
+                </Badge>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {!previewing && (
         <div
@@ -225,6 +249,7 @@ function TypeBadge({ type }: { type: string }) {
   const map: Record<string, string> = {
     income: 'bg-green-100 text-green-800',
     expense: 'bg-red-100 text-red-800',
+    reimbursement: 'bg-orange-100 text-orange-800',
     investment_application: 'bg-blue-100 text-blue-800',
     investment_withdrawal: 'bg-blue-100 text-blue-800',
     card_payment: 'bg-gray-100 text-gray-600',

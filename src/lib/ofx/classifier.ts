@@ -66,8 +66,8 @@ export function classifyTransaction(
       category = 'Fatura cartão'
       status = 'neutral'
     } else if (raw.trntype === 'CREDIT') {
-      // Reembolso/estorno — marcado como neutro, linker vai avaliar depois
-      type = 'income'
+      // No cartão de crédito não existe receita — valor positivo é sempre reembolso/estorno
+      type = 'reimbursement'
       category = 'Outros'
       status = 'neutral'
     } else {
@@ -114,6 +114,7 @@ export function displayAmount(t: Transaction): number {
 export const TYPE_LABELS: Record<TransactionType, string> = {
   income: 'Receita',
   expense: 'Despesa',
+  reimbursement: 'Reembolso',
   investment_application: 'Investimento (aplicação)',
   investment_withdrawal: 'Investimento (resgate)',
   card_payment: 'Pagamento de fatura',

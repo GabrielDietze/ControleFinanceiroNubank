@@ -22,7 +22,11 @@ const PAGE_SIZE = 50
 type SortField = 'date' | 'amount'
 
 export default function TransactionsPage() {
-  const { transactions, updateCategory } = useTransactionStore()
+  const { transactions, updateCategory, settings } = useTransactionStore()
+  const allCategories = useMemo(
+    () => [...DEFAULT_CATEGORIES, ...(settings.customCategories ?? [])],
+    [settings.customCategories],
+  )
 
   const [search, setSearch] = useState('')
   const [filterType, setFilterType] = useState<TransactionType | 'all'>('all')
@@ -127,7 +131,7 @@ export default function TransactionsPage() {
             placeholder="Categoria"
           >
             <SelectItem value="all">Todas as categorias</SelectItem>
-            {DEFAULT_CATEGORIES.map((c) => (
+            {allCategories.map((c) => (
               <SelectItem key={c} value={c}>{c}</SelectItem>
             ))}
           </FilterSelect>
@@ -185,6 +189,7 @@ export default function TransactionsPage() {
                     onEditStart={() => setEditingId(t.id)}
                     onCategoryChange={(cat) => handleCategoryChange(t.id, cat)}
                     onEditCancel={() => setEditingId(null)}
+                    allCategories={allCategories}
                   />
                 ))}
               </tbody>
@@ -226,12 +231,14 @@ function TransactionRow({
   onEditStart,
   onCategoryChange,
   onEditCancel,
+  allCategories,
 }: {
   t: Transaction
   isEditing: boolean
   onEditStart: () => void
   onCategoryChange: (cat: string) => void
   onEditCancel: () => void
+  allCategories: string[]
 }) {
   const isNeutral = t.status === 'neutral' || t.status === 'cancelled'
 
@@ -262,7 +269,7 @@ function TransactionRow({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {DEFAULT_CATEGORIES.map((c) => (
+              {allCategories.map((c) => (
                 <SelectItem key={c} value={c} className="text-xs">{c}</SelectItem>
               ))}
             </SelectContent>
@@ -319,6 +326,7 @@ function TypeBadge({ type }: { type: string }) {
   const map: Record<string, string> = {
     income: 'bg-green-100 text-green-800',
     expense: 'bg-red-100 text-red-800',
+    reimbursement: 'bg-orange-100 text-orange-800',
     investment_application: 'bg-blue-100 text-blue-800',
     investment_withdrawal: 'bg-cyan-100 text-cyan-800',
     card_payment: 'bg-gray-100 text-gray-600',

@@ -26,6 +26,8 @@ const COLORS = [
   '#8b5cf6', '#ec4899', '#14b8a6', '#f97316', '#64748b',
 ]
 
+type Source = 'all' | 'account' | 'credit_card'
+
 export default function CategoriesPage() {
   const { transactions } = useTransactionStore()
 
@@ -36,13 +38,16 @@ export default function CategoriesPage() {
   }, [transactions])
 
   const [selectedMonth, setSelectedMonth] = useState(months[0] ?? '')
+  const [source, setSource] = useState<Source>('all')
+  const effectiveMonth = months.includes(selectedMonth) ? selectedMonth : (months[0] ?? selectedMonth)
 
   const expenses = useMemo(
     () =>
       transactions
         .filter(isFinanciallyActive)
-        .filter((t) => t.amount < 0 && isoMonthOf(t.date) === selectedMonth),
-    [transactions, selectedMonth],
+        .filter((t) => t.amount < 0 && isoMonthOf(t.date) === effectiveMonth)
+        .filter((t) => source === 'all' || t.source === source),
+    [transactions, effectiveMonth, source],
   )
 
   const byCategory = useMemo(() => {
@@ -65,28 +70,41 @@ export default function CategoriesPage() {
       const txs = transactions
         .filter(isFinanciallyActive)
         .filter((t) => t.amount < 0 && isoMonthOf(t.date) === m)
+        .filter((t) => source === 'all' || t.source === source)
       const entry: Record<string, number | string> = { month: monthLabel(m) }
       topCats.forEach((cat) => {
         entry[cat] = +Math.abs(txs.filter((t) => t.category === cat).reduce((s, t) => s + t.amount, 0)).toFixed(2)
       })
       return entry
     })
-  }, [transactions, months, topCats])
+  }, [transactions, months, topCats, source])
 
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Categorias</h1>
-        <Select value={selectedMonth} onValueChange={(v) => { if (v) setSelectedMonth(v) }}>
-          <SelectTrigger className="w-36 h-8 text-sm">
-            <SelectValue placeholder="Mês" />
-          </SelectTrigger>
-          <SelectContent>
-            {months.map((m) => (
-              <SelectItem key={m} value={m}>{m}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex gap-2">
+          <Select value={source} onValueChange={(v) => setSource(v as Source)}>
+            <SelectTrigger className="w-40 h-8 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Conta + Cartão</SelectItem>
+              <SelectItem value="account">Conta corrente</SelectItem>
+              <SelectItem value="credit_card">Cartão de crédito</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={effectiveMonth} onValueChange={(v) => { if (v) setSelectedMonth(v) }}>
+            <SelectTrigger className="w-36 h-8 text-sm">
+              <SelectValue placeholder="Mês" />
+            </SelectTrigger>
+            <SelectContent>
+              {months.map((m) => (
+                <SelectItem key={m} value={m}>{m}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -122,7 +140,7 @@ export default function CategoriesPage() {
         {/* Lista detalhada */}
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Detalhamento — {selectedMonth}</CardTitle>
+            <CardTitle className="text-base">Detalhamento — {effectiveMonth}</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <table className="w-full text-sm">
