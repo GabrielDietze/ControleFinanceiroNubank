@@ -5,7 +5,24 @@
       "Bash(cp -r \"C:\\\\Users\\\\gabriel.novy\\\\Desktop\\\\pessoal\\\\github\\\\financeiro-temp/.\" \"C:\\\\Users\\\\gabriel.novy\\\\Desktop\\\\pessoal\\\\github\\\\controle financeiro com rubens/\")",
       "Bash(rm -rf \"C:\\\\Users\\\\gabriel.novy\\\\Desktop\\\\pessoal\\\\github\\\\financeiro-temp\")",
       "Bash(npm install:*)",
-      "Bash(npx shadcn@latest init --defaults)"
+      "Bash(npx shadcn@latest init --defaults)",
+      "Bash(npx shadcn@latest add badge card select table input dialog tabs separator skeleton toast)",
+      "Bash(npx shadcn@latest add badge card select table input dialog tabs separator skeleton sonner)",
+      "Bash(mkdir -p \"C:\\\\Users\\\\gabriel.novy\\\\Desktop\\\\pessoal\\\\github\\\\controle financeiro com rubens\\\\src\\\\types\")",
+      "Bash(mkdir -p \"C:\\\\Users\\\\gabriel.novy\\\\Desktop\\\\pessoal\\\\github\\\\controle financeiro com rubens\\\\src\\\\lib\\\\ofx\")",
+      "Bash(mkdir -p \"C:\\\\Users\\\\gabriel.novy\\\\Desktop\\\\pessoal\\\\github\\\\controle financeiro com rubens\\\\src\\\\lib\\\\db\")",
+      "Bash(mkdir -p \"C:\\\\Users\\\\gabriel.novy\\\\Desktop\\\\pessoal\\\\github\\\\controle financeiro com rubens\\\\src\\\\lib\\\\utils\")",
+      "Bash(mkdir -p \"C:\\\\Users\\\\gabriel.novy\\\\Desktop\\\\pessoal\\\\github\\\\controle financeiro com rubens\\\\src\\\\store\")",
+      "Bash(npm run:*)",
+      "Bash(cmd /c \"rmdir /s /q node_modules\")",
+      "Bash(npx tsc:*)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); [print\\(k\\) for k in d.get\\('exports', {}\\).keys\\(\\)]\")",
+      "Bash(node -e \"const p=require\\('./node_modules/@base-ui/react/package.json'\\); const exports=p.exports; const key='./select'; console.log\\(JSON.stringify\\(exports[key] || 'NOT FOUND'\\)\\)\")",
+      "Bash(node -e \"const r=require\\('./node_modules/recharts/package.json'\\); console.log\\('recharts:', r.version\\); const e=require\\('./node_modules/es-toolkit/package.json'\\); console.log\\('es-toolkit:', e.version\\);\")",
+      "Bash(node -e \"const e=require\\('./node_modules/es-toolkit/package.json'\\); const exp=e.exports; const k='./compat/sortBy'; console.log\\(JSON.stringify\\(exp[k] || 'NOT FOUND'\\)\\)\")",
+      "Bash(node -e \"const e=require\\('./node_modules/es-toolkit/package.json'\\); const exp=e.exports; const keys=Object.keys\\(exp\\).filter\\(k=>k.includes\\('sort'\\)\\); console.log\\(keys\\)\")",
+      "Bash(node -e \"const e=require\\('./node_modules/es-toolkit/package.json'\\); console.log\\('es-toolkit:', e.version\\); const k='./compat/sortBy'; const exp=e.exports; console.log\\(JSON.stringify\\(exp[k] || 'NOT FOUND'\\)\\)\")",
+      "Bash(node -e \"const e=require\\('./node_modules/es-toolkit/package.json'\\); const exp=e.exports; const keys=Object.keys\\(exp\\).slice\\(0,30\\); console.log\\(keys.join\\('\\\\n'\\)\\)\")"
     ]
   }
 }
