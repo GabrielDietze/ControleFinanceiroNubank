@@ -15,7 +15,7 @@ import { toast } from 'sonner'
 export default function ImportPage() {
   const { importTransactions, existingFITIDs, settings, transactions } = useTransactionStore()
   const [previewing, setPreviewing] = useState<ImportPreviewItem[] | null>(null)
-  const [fileInfo, setFileInfo] = useState<{ name: string; type: string } | null>(null)
+  const [filesInfo, setFilesInfo] = useState<{ name: string; type: string }[]>([])
   const [dragging, setDragging] = useState(false)
   const [importing, setImporting] = useState(false)
 
@@ -25,42 +25,65 @@ export default function ImportPage() {
     return Array.from(set).sort().reverse()
   }, [transactions])
 
-  const processFile = useCallback(
-    (file: File) => {
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        try {
-          const raw = e.target?.result as string
-          const parsed = parseOFX(raw)
-          const existing = existingFITIDs()
+  const processFiles = useCallback(
+    (files: File[]) => {
+      if (files.length === 0) return
+      const existing = existingFITIDs()
+      const allItems: ImportPreviewItem[] = []
+      const infos: { name: string; type: string }[] = []
+      let completed = 0
+      let errored = 0
 
-          const items: ImportPreviewItem[] = parsed.transactions.map((rawTx) => {
-            const classified = classifyTransaction(rawTx, {
-              source: parsed.fileType,
-              extraRules: settings.customCategoryRules,
-              internalNames: settings.internalNames,
-            })
-            return {
-              raw: rawTx,
-              classified,
-              isDuplicate: existing.has(rawTx.fitid),
-            }
-          })
+      const finish = () => {
+        if (errored > 0 && allItems.length === 0) return
+        if (errored > 0) toast.warning(`${errored} arquivo(s) não puderam ser lidos.`)
 
-          // Ordena: não-duplicatas primeiro, por data desc
-          items.sort((a, b) => {
-            if (a.isDuplicate !== b.isDuplicate) return a.isDuplicate ? 1 : -1
-            return b.classified.date.localeCompare(a.classified.date)
-          })
+        // Deduplicar FITIDs entre arquivos (manter primeira ocorrência)
+        const seenFitids = new Set<string>()
+        const deduped = allItems.filter((item) => {
+          if (seenFitids.has(item.raw.fitid)) return false
+          seenFitids.add(item.raw.fitid)
+          return true
+        })
 
-          setFileInfo({ name: file.name, type: parsed.fileType })
-          setPreviewing(items)
-        } catch (err) {
-          toast.error('Erro ao processar o arquivo OFX. Verifique se é um arquivo válido.')
-          console.error(err)
-        }
+        deduped.sort((a, b) => {
+          if (a.isDuplicate !== b.isDuplicate) return a.isDuplicate ? 1 : -1
+          return b.classified.date.localeCompare(a.classified.date)
+        })
+
+        setFilesInfo(infos)
+        setPreviewing(deduped)
       }
-      reader.readAsText(file, 'UTF-8')
+
+      files.forEach((file) => {
+        const reader = new FileReader()
+        reader.onload = (e) => {
+          try {
+            const raw = e.target?.result as string
+            const parsed = parseOFX(raw)
+            infos.push({ name: file.name, type: parsed.fileType })
+            parsed.transactions.forEach((rawTx) => {
+              allItems.push({
+                raw: rawTx,
+                classified: classifyTransaction(rawTx, {
+                  source: parsed.fileType,
+                  extraRules: settings.customCategoryRules,
+                  internalNames: settings.internalNames,
+                }),
+                isDuplicate: existing.has(rawTx.fitid),
+              })
+            })
+          } catch (err) {
+            errored++
+            toast.error(`Erro ao processar "${file.name}". Verifique se é um arquivo OFX válido.`)
+            console.error(err)
+          } finally {
+            completed++
+            if (completed === files.length) finish()
+          }
+        }
+        reader.readAsText(file, 'UTF-8')
+      })
     },
     [existingFITIDs, settings],
   )
@@ -69,15 +92,15 @@ export default function ImportPage() {
     (e: React.DragEvent) => {
       e.preventDefault()
       setDragging(false)
-      const file = e.dataTransfer.files[0]
-      if (file) processFile(file)
+      const files = Array.from(e.dataTransfer.files).filter((f) => f.name.endsWith('.ofx'))
+      if (files.length > 0) processFiles(files)
     },
-    [processFile],
+    [processFiles],
   )
 
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) processFile(file)
+    const files = Array.from(e.target.files ?? [])
+    if (files.length > 0) processFiles(files)
     e.target.value = ''
   }
 
@@ -89,7 +112,7 @@ export default function ImportPage() {
       const { added, duplicates } = await importTransactions(newItems)
       toast.success(`${added} transações importadas. ${duplicates > 0 ? `${duplicates} duplicatas ignoradas.` : ''}`)
       setPreviewing(null)
-      setFileInfo(null)
+      setFilesInfo([])
     } catch (err) {
       toast.error('Erro ao importar. Tente novamente.')
       console.error(err)
@@ -106,7 +129,7 @@ export default function ImportPage() {
       <div>
         <h1 className="text-2xl font-semibold">Importar Extrato OFX</h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Arraste ou selecione um arquivo .ofx exportado do Nubank (conta corrente ou cartão).
+          Arraste ou selecione um ou mais arquivos .ofx exportados do Nubank (conta corrente ou cartão).
         </p>
       </div>
 
@@ -139,29 +162,34 @@ export default function ImportPage() {
           onClick={() => document.getElementById('ofx-input')?.click()}
         >
           <Upload className="mx-auto mb-3 text-muted-foreground" size={40} />
-          <p className="font-medium">Solte o arquivo aqui ou clique para selecionar</p>
-          <p className="text-muted-foreground text-sm mt-1">Suporta: .ofx (conta corrente e cartão de crédito)</p>
+          <p className="font-medium">Solte os arquivos aqui ou clique para selecionar</p>
+          <p className="text-muted-foreground text-sm mt-1">Suporta múltiplos .ofx (conta corrente e cartão de crédito)</p>
           <input
             id="ofx-input"
             type="file"
             accept=".ofx"
+            multiple
             className="hidden"
             onChange={handleFileInput}
           />
         </div>
       )}
 
-      {previewing && fileInfo && (
+      {previewing && filesInfo.length > 0 && (
         <div className="space-y-4">
           {/* Info bar */}
           <Card>
             <CardContent className="py-3 px-4 flex items-center gap-4 flex-wrap">
-              <div className="flex items-center gap-2 text-sm">
+              <div className="flex items-center gap-2 text-sm flex-wrap">
                 <FileText size={16} className="text-muted-foreground" />
-                <span className="font-medium">{fileInfo.name}</span>
-                <Badge variant="outline">
-                  {fileInfo.type === 'account' ? 'Conta Corrente' : 'Cartão de Crédito'}
-                </Badge>
+                {filesInfo.map((fi, i) => (
+                  <span key={i} className="flex items-center gap-1">
+                    <span className="font-medium">{fi.name}</span>
+                    <Badge variant="outline">
+                      {fi.type === 'account' ? 'Conta Corrente' : 'Cartão'}
+                    </Badge>
+                  </span>
+                ))}
               </div>
               <div className="flex gap-3 ml-auto items-center">
                 <span className="text-sm text-green-600 flex items-center gap-1">
@@ -175,7 +203,7 @@ export default function ImportPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => { setPreviewing(null); setFileInfo(null) }}
+                  onClick={() => { setPreviewing(null); setFilesInfo([]) }}
                 >
                   Cancelar
                 </Button>
