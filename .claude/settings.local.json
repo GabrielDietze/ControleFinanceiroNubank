@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm create:*)",
+      "Bash(cp -r \"C:\\\\Users\\\\gabriel.novy\\\\Desktop\\\\pessoal\\\\github\\\\financeiro-temp/.\" \"C:\\\\Users\\\\gabriel.novy\\\\Desktop\\\\pessoal\\\\github\\\\controle financeiro com rubens/\")",
+      "Bash(rm -rf \"C:\\\\Users\\\\gabriel.novy\\\\Desktop\\\\pessoal\\\\github\\\\financeiro-temp\")",
+      "Bash(npm install:*)",
+      "Bash(npx shadcn@latest init --defaults)"
+    ]
+  }
+}
