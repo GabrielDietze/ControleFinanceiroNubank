@@ -755,7 +755,6 @@ function KPICard({
   subtitle?: string
   onClick?: () => void
 }) {
-  const Wrapper = onClick ? 'button' : 'div'
   return (
     <Card
       className={onClick ? 'cursor-pointer hover:ring-primary/30 hover:ring-2 transition-shadow' : ''}

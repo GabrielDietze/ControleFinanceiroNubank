@@ -435,7 +435,7 @@ function CustomCategoriesEditor({
   const add = () => {
     const trimmed = newCategory.trim()
     if (!trimmed) return
-    if (categories.includes(trimmed) || DEFAULT_CATEGORIES.includes(trimmed)) {
+    if (categories.includes(trimmed) || (DEFAULT_CATEGORIES as readonly string[]).includes(trimmed)) {
       toast.error('Essa categoria já existe.')
       return
     }
