@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { toast } from 'sonner'
 import { useTransactionStore } from '@/store/useTransactionStore'
 import type { Transaction, TransactionType } from '@/types'
 import { formatCurrency } from '@/lib/utils/currency'
@@ -22,7 +23,7 @@ const PAGE_SIZE = 50
 type SortField = 'date' | 'amount'
 
 export default function TransactionsPage() {
-  const { transactions, updateCategory, settings } = useTransactionStore()
+  const { transactions, updateCategory, addLearnedRule, settings } = useTransactionStore()
   const allCategories = useMemo(
     () => [...DEFAULT_CATEGORIES, ...(settings.customCategories ?? [])],
     [settings.customCategories],
@@ -76,8 +77,24 @@ export default function TransactionsPage() {
   }
 
   const handleCategoryChange = async (id: string, cat: string) => {
-    await updateCategory(id, cat)
+    const result = await updateCategory(id, cat)
     setEditingId(null)
+    if (result && !result.alreadyHasRule) {
+      const { pattern } = result
+      const label = pattern.length > 40 ? pattern.slice(0, 40) + '…' : pattern
+      toast(`Criar regra para "${label}"?`, {
+        description: `Futuras transações serão classificadas como "${cat}" automaticamente.`,
+        duration: 10000,
+        action: {
+          label: 'Criar regra',
+          onClick: () => addLearnedRule(pattern, cat),
+        },
+        cancel: {
+          label: 'Não',
+          onClick: () => {},
+        },
+      })
+    }
   }
 
   return (

@@ -39,6 +39,7 @@ export interface CategoryRule {
   pattern: string // regex ou substring (case-insensitive)
   category: string
   isRegex: boolean
+  learned?: boolean // true = gerada automaticamente pelo aprendizado
 }
 
 export interface CategoryBudget {

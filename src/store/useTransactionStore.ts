@@ -16,6 +16,8 @@ import {
   type ExportData,
 } from '@/lib/db'
 import { linkTransactions } from '@/lib/ofx/linker'
+import { extractLearnedPattern } from '@/lib/utils/categories'
+import type { CategoryRule } from '@/types'
 
 interface TransactionStore {
   transactions: Transaction[]
@@ -32,7 +34,10 @@ interface TransactionStore {
   ) => Promise<{ added: number; duplicates: number }>
 
   // Atualiza categoria de uma transação manualmente
-  updateCategory: (id: string, category: string) => Promise<void>
+  updateCategory: (id: string, category: string) => Promise<{ pattern: string; alreadyHasRule: boolean }>
+
+  // Salva uma regra aprendida manualmente confirmada pelo usuário
+  addLearnedRule: (pattern: string, category: string) => Promise<void>
 
   // Atualiza settings
   updateSettings: (settings: AppSettings) => Promise<void>
@@ -131,6 +136,32 @@ export const useTransactionStore = create<TransactionStore>((set, get) => ({
     set((s) => ({
       transactions: s.transactions.map((t) => (t.id === id ? updated : t)),
     }))
+    const pattern = extractLearnedPattern(tx.memo)
+    const alreadyHasRule = get().settings.customCategoryRules.some(
+      (r) => r.pattern.toLowerCase() === pattern.toLowerCase(),
+    )
+    return { pattern, alreadyHasRule }
+  },
+
+  addLearnedRule: async (pattern, category) => {
+    const { settings } = get()
+    const alreadyExists = settings.customCategoryRules.some(
+      (r) => r.pattern.toLowerCase() === pattern.toLowerCase(),
+    )
+    if (alreadyExists) return
+    const newRule: CategoryRule = {
+      id: `learned-${crypto.randomUUID()}`,
+      pattern,
+      category,
+      isRegex: false,
+      learned: true,
+    }
+    const newSettings = {
+      ...settings,
+      customCategoryRules: [newRule, ...settings.customCategoryRules],
+    }
+    await saveSettings(newSettings)
+    set({ settings: newSettings })
   },
 
   updateSettings: async (settings) => {

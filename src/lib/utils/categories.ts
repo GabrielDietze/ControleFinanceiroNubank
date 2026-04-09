@@ -11,6 +11,8 @@ export const DEFAULT_CATEGORIES = [
   'Academia / Bem-estar',
   'Beleza / Barbearia',
   'Vestuário',
+  'Jogos',
+  'Compras Online',
   'Entretenimento',
   'Viagens',
   'Pets',
@@ -36,6 +38,7 @@ export const DEFAULT_CATEGORY_RULES: CategoryRule[] = [
   { id: 'r-alim-8', pattern: 'padaria', category: 'Alimentação', isRegex: false },
   { id: 'r-alim-9', pattern: 'pizza', category: 'Alimentação', isRegex: false },
   { id: 'r-alim-10', pattern: 'sabor', category: 'Alimentação', isRegex: false },
+  { id: 'r-comp-1', pattern: 'mercado livre', category: 'Compras Online', isRegex: false },
   { id: 'r-alim-11', pattern: 'mercado', category: 'Alimentação', isRegex: false },
   { id: 'r-alim-12', pattern: 'supermercado', category: 'Alimentação', isRegex: false },
   { id: 'r-alim-13', pattern: 'churras', category: 'Alimentação', isRegex: false },
@@ -100,7 +103,7 @@ export const DEFAULT_CATEGORY_RULES: CategoryRule[] = [
   { id: 'r-sign-6', pattern: 'prime', category: 'Assinaturas', isRegex: false },
   { id: 'r-sign-7', pattern: 'disney', category: 'Assinaturas', isRegex: false },
   { id: 'r-sign-8', pattern: 'playstat', category: 'Assinaturas', isRegex: false },
-  { id: 'r-sign-9', pattern: 'sony', category: 'Assinaturas', isRegex: false },
+  { id: 'r-sign-9', pattern: 'sony', category: 'Jogos', isRegex: false },
   { id: 'r-sign-10', pattern: 'claude.ai', category: 'Assinaturas', isRegex: false },
   { id: 'r-sign-11', pattern: 'livecareer', category: 'Assinaturas', isRegex: false },
   // Academia
@@ -137,7 +140,20 @@ export const DEFAULT_CATEGORY_RULES: CategoryRule[] = [
   { id: 'r-tel-5', pattern: 'tim ', category: 'Telecom', isRegex: false },
   // Salário
   { id: 'r-sal-1', pattern: 'CBF INDUSTRIA', category: 'Salário / Renda', isRegex: false },
+  { id: 'r-sal-2', pattern: 'GABRIEL AUGUSTO DIETZE NOVY', category: 'Salário / Renda', isRegex: false },
 ]
+
+/**
+ * Extrai o padrão mais útil do memo para criar uma regra aprendida.
+ * - PIX: extrai o nome da pessoa/empresa (entre o primeiro e segundo " - ")
+ * - Outros: usa o memo completo
+ */
+export function extractLearnedPattern(memo: string): string {
+  // "Transferência recebida pelo Pix - NOME - •••..." ou "Transferência Recebida - NOME - •••..."
+  const pixMatch = memo.match(/transfer[eê]ncia\s+\w+(?:\s+pelo\s+pix)?\s+-\s+(.+?)\s+-\s+[•\d]/i)
+  if (pixMatch) return pixMatch[1].trim()
+  return memo
+}
 
 export function categorizeByMemo(memo: string, extraRules: CategoryRule[] = []): string {
   const lower = memo.toLowerCase()
