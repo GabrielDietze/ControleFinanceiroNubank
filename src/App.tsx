@@ -9,6 +9,7 @@ import CategoriesPage from '@/pages/Categories'
 import InvestmentsPage from '@/pages/Investments'
 import ImportPage from '@/pages/Import'
 import SettingsPage from '@/pages/Settings'
+import ReportsPage from '@/pages/Reports'
 
 function AppInitializer({ children }: { children: React.ReactNode }) {
   const load = useTransactionStore((s) => s.load)
@@ -31,6 +32,7 @@ function App() {
             <Route path="/categories" element={<CategoriesPage />} />
             <Route path="/investments" element={<InvestmentsPage />} />
             <Route path="/import" element={<ImportPage />} />
+            <Route path="/reports" element={<ReportsPage />} />
             <Route path="/settings" element={<SettingsPage />} />
           </Route>
         </Routes>

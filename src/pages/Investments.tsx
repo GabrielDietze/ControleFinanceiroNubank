@@ -176,7 +176,6 @@ export default function InvestmentsPage() {
     () => filtered.filter((i) => i.type === 'yield').reduce((s, i) => s + i.amount, 0),
     [filtered],
   )
-  const netBalance = totalApplied - totalWithdrawn + totalYields
   const yieldPct = totalApplied > 0 ? (totalYields / totalApplied) * 100 : 0
 
   // Métricas de rendimento
@@ -371,9 +370,12 @@ export default function InvestmentsPage() {
         <Card>
           <CardContent className="pt-5 pb-4">
             <div className="text-sm text-muted-foreground mb-1">Saldo líquido</div>
-            <div className={`text-xl font-bold ${netBalance >= 0 ? 'text-green-600' : 'text-red-500'}`}>
-              {formatCurrency(netBalance)}
+            <div className={`text-xl font-bold ${(totalApplied - totalWithdrawn + totalNetYields) >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+              {formatCurrency(totalApplied - totalWithdrawn + totalNetYields)}
             </div>
+            {hasIRData && (
+              <div className="text-xs text-muted-foreground mt-0.5">após IR estimado</div>
+            )}
           </CardContent>
         </Card>
         <Card>

@@ -37,7 +37,9 @@
       "Bash(npx vite:*)",
       "Bash(echo \"exit: $?\")",
       "Bash(/c/Python312/python -)",
-      "Bash(cmd:*)"
+      "Bash(cmd:*)",
+      "Bash(node -e \"const pkg = require\\('@base-ui/react/package.json'\\); const exp = pkg.exports; console.log\\(JSON.stringify\\(Object.entries\\(exp\\).find\\(\\([k]\\) => k.includes\\('tab'\\)\\), null, 2\\)\\)\")",
+      "Bash(node:*)"
     ]
   }
 }

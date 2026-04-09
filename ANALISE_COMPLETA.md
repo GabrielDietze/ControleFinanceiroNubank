@@ -18,6 +18,8 @@
 9. [O que está faltando](#9-o-que-está-faltando)
 10. [Sugestões práticas e aplicáveis](#10-sugestões-práticas-e-aplicáveis)
 11. [Priorização final](#11-priorização-final)
+12. [Análise de Dados Avançada — Visão 360°](#12-análise-de-dados-avançada--visão-360)
+13. [Frontend — Design para Analytics Intuitivo](#13-frontend--design-para-analytics-intuitivo)
 
 ---
 
@@ -419,6 +421,646 @@ O usuário não consegue ver, na tela de Import, quais períodos já foram impor
 | 16 | Adicionar "Outros" na legenda do Donut | Baixo |
 | 17 | Insight de velocidade: progresso do mês atual vs histórico | Médio |
 | 18 | Campo "Renda fixa esperada" em Configurações | Baixo |
+
+---
+
+## 12. Análise de Dados Avançada — Visão 360°
+
+> Seção adicionada em 2026-04-09. Foco em métricas avançadas, análise temporal e inteligência financeira para visão completa do passado, presente e futuro.
+
+---
+
+### Estado atual da análise de dados
+
+| Recurso | Status |
+|---|---|
+| Métricas mensais (receita, despesa, saldo, savings rate) | Implementado |
+| Comparação mês atual vs. mês anterior | Implementado |
+| Gráfico de 6 meses (receitas/despesas/saldo) | Implementado |
+| Breakdown de categorias com deltas | Implementado |
+| Top merchants | Implementado |
+| Curva diária cumulativa de gastos | Implementado |
+| Alertas automáticos básicos | Implementado |
+| Comparação ano a ano | **Ausente** |
+| Médias móveis (3m, 6m, 12m) | **Ausente** |
+| Visão trimestral / anual | **Ausente** |
+| Projeções e forecasts | **Ausente** |
+| Score de saúde financeira | **Ausente** |
+| Detecção de recorrentes | **Ausente** |
+| Range de datas customizado | **Ausente** |
+| Heatmap de gastos | **Ausente** |
+
+---
+
+### PASSADO — Análise Histórica
+
+#### O que falta
+
+| Lacuna | Impacto | Complexidade |
+|---|---|---|
+| Comparação ano a ano (jan/2025 vs jan/2026) | Alto | Média |
+| Médias móveis por categoria (3m, 6m, 12m) | Alto | Média |
+| Melhor e pior mês de todos os tempos por categoria | Médio | Baixa |
+| Histórico completo por merchant (all-time) | Médio | Baixa |
+| Sazonalidade — quais meses historicamente são mais caros | Alto | Média |
+| Volatilidade por categoria (desvio padrão mensal) | Médio | Média |
+| Retrospectiva anual com ranking de categorias | Alto | Média |
+| Tendência do savings rate nos últimos 12 meses | Alto | Baixa |
+
+#### Exemplos de métricas úteis
+
+```
+Alimentação — Média 6 meses: R$ 920 | Mês atual: R$ 1.150 (+25%) | Máximo histórico: R$ 1.340 (out/2025)
+Melhor mês: jun/2025 — Saldo +R$ 2.800 (maior poupança)
+Pior mês: dez/2025 — Gasto R$ 3.100 acima da média
+```
+
+---
+
+### PRESENTE — Visão em Tempo Real
+
+#### O que falta
+
+| Lacuna | Impacto | Complexidade |
+|---|---|---|
+| **Burn rate**: ritmo atual → projeção p/ fim do mês | Alto | Baixa |
+| Detecção de transações recorrentes (assinaturas, contas fixas) | Alto | Média |
+| Custo fixo vs. variável — breakdown automático | Alto | Alta |
+| Diversificação de receita (quantas fontes, % de cada uma) | Médio | Baixa |
+| Velocidade de gasto (R$/dia) vs. média histórica | Médio | Baixa |
+| Alerta de pace: "você vai gastar R$ X a mais que o mês passado" | Alto | Baixa |
+| Dias sem gasto (streak de economia) | Baixo | Baixa |
+
+#### Exemplos de métricas úteis
+
+```
+Dia 9 de 30 — Você gastou R$ 890 (34% do gasto médio mensal R$ 2.600)
+Pace atual: R$ 99/dia → Projeção fim do mês: R$ 2.970 (+14% vs média)
+Custo fixo identificado: R$ 1.240/mês (Spotify, Netflix, academia, aluguel...)
+```
+
+---
+
+### FUTURO — Projeções e Forecasts
+
+#### O que falta
+
+| Lacuna | Impacto | Complexidade |
+|---|---|---|
+| **Projeção de fim de mês** baseada no pace atual | Alto | Baixa |
+| Forecast de categoria (baseado em média histórica) | Alto | Média |
+| Projeção de investimento (juros compostos sobre saldo atual) | Alto | Média |
+| Data estimada para atingir meta de poupança | Alto | Baixa |
+| Cash flow projetado (próximos 6-12 meses) | Alto | Alta |
+| Simulador "e se eu cortar X?" — impacto no savings rate | Alto | Alta |
+
+#### Exemplos de métricas úteis
+
+```
+Se mantiver o ritmo atual:
+  → Poupança em 12 meses: R$ 18.400 (meta: R$ 24.000 — falta R$ 5.600)
+  → Meta atingida em: mar/2027
+  → Reduzindo Alimentação em R$ 200/mês: meta em dez/2026
+```
+
+---
+
+### Intervalos de Tempo
+
+#### Recursos de intervalo ausentes
+
+| Recurso | Impacto |
+|---|---|
+| Visão semanal (qual semana do mês foi mais cara) | Médio |
+| Visão trimestral (Q1, Q2, Q3, Q4) | Alto |
+| Visão anual consolidada (resumo do ano inteiro) | Alto |
+| **Range customizado** (ex: 15/mar a 10/abr) | Médio |
+| Rolling windows: últimos 30, 90, 180, 365 dias | Alto |
+| **Heatmap de gastos**: eixo Y = mês, eixo X = dia, cor = intensidade | Alto |
+| Padrão por dia da semana (segunda é mais cara que sábado?) | Baixo |
+
+#### Estrutura de seleção de período sugerida
+
+```
+[Semana] [Mês] [Trimestre] [Ano] [Personalizado: dd/mm/aaaa → dd/mm/aaaa]
+
+Rolling:
+[Últimos 30 dias] [Últimos 90 dias] [Últimos 12 meses]
+```
+
+---
+
+### Visualizações Ausentes
+
+| Visualização | O que mostra | Impacto |
+|---|---|---|
+| **Waterfall chart** | Income → despesas por categoria → saldo final | Alto |
+| **Treemap** | Hierarquia de gastos (categoria → merchant → transação) | Alto |
+| **Heatmap mensal** | Intensidade de gasto por dia do mês ao longo dos meses | Alto |
+| **Sankey** | Fluxo de dinheiro: receitas → categorias → investimentos | Alto |
+| Scatter de anomalias | Gastos incomuns plotados por data e valor | Médio |
+| Linha de tendência | Regressão linear sobre gastos históricos por categoria | Médio |
+
+---
+
+### Métricas Avançadas Ausentes
+
+| Métrica | Fórmula | Importância |
+|---|---|---|
+| **Meses de reserva de emergência** | `saldo_total / gasto_médio_mensal` | Crítica |
+| **Índice de liberdade financeira** | `renda_passiva / gastos_totais` | Alta |
+| Razão investimento/renda | `aportes_mensais / receita_mensal` | Alta |
+| **Score de saúde financeira (0–100)** | ponderação de savings rate, metas, reserva, tendência | Alta |
+| Concentração de gastos | `% que as top 3 categorias representam do total` | Médio |
+| Cobertura de orçamento | `% de categorias dentro do budget configurado` | Médio |
+| Tendência do savings rate | linha de tendência dos últimos 12 meses (subindo/caindo?) | Alta |
+| Volatilidade de renda | desvio padrão da receita mensal | Médio |
+
+#### Fórmula sugerida para Score de Saúde Financeira
+
+```
+Score (0–100) =
+  Savings Rate ≥ 20%     → +25 pts
+  Reserva ≥ 3 meses      → +25 pts
+  Metas dentro do budget → +20 pts
+  Savings rate crescendo → +15 pts
+  Investimentos ativos   → +15 pts
+```
+
+---
+
+### Página Nova Sugerida: Analytics / Relatórios
+
+Uma página dedicada à análise avançada, separada do Dashboard operacional:
+
+#### Seções propostas
+
+1. **Painel Temporal**
+   - Alternância livre: semana / mês / trimestre / ano / range customizado
+   - Rolling windows: últimos 30, 90, 180, 365 dias
+   - Comparação de dois períodos lado a lado
+
+2. **Retrospectiva Anual**
+   - Ranking de categorias do ano
+   - Melhores e piores meses
+   - Evolução do savings rate (linha de tendência)
+   - Total gasto, total recebido, total investido no ano
+
+3. **Score de Saúde Financeira**
+   - Nota de 0 a 100 com breakdown explicado
+   - Comparação com mês anterior e com 6 meses atrás
+
+4. **Projeções**
+   - Onde você vai estar em 3, 6 e 12 meses no ritmo atual
+   - Data projetada para atingir cada meta configurada
+   - Gráfico de investimento projetado (juros compostos)
+
+5. **Análise de Recorrentes**
+   - Detecção automática de assinaturas e gastos fixos
+   - Total mensal de recorrentes identificados
+   - Alertas de aumento em recorrentes (ex: plano de saúde que subiu)
+
+6. **Comparador de Períodos**
+   - Seleciona dois períodos quaisquer e compara KPIs lado a lado
+   - Diferença absoluta e percentual por categoria
+
+---
+
+### Priorização de Análise de Dados
+
+#### Fase 1 — Quick Wins (alto impacto, baixo esforço)
+
+| # | Feature | Onde implementar |
+|---|---|---|
+| 1 | Projeção de fim de mês (burn rate + forecast) | Dashboard — nova seção |
+| 2 | Meses de reserva de emergência | Dashboard — KPI card |
+| 3 | Tendência do savings rate (últimos 12 meses) | Dashboard — gráfico existente |
+| 4 | Rolling 12 meses (médias móveis por categoria) | Dashboard + Categorias |
+| 5 | Visão anual consolidada | Nova aba no Dashboard ou página Analytics |
+
+#### Fase 2 — Médio Prazo
+
+| # | Feature |
+|---|---|
+| 6 | Heatmap de gastos (dia × mês) |
+| 7 | Detecção automática de recorrentes |
+| 8 | Comparação ano a ano (mesmo mês, ano anterior) |
+| 9 | Visão trimestral com agrupamento automático |
+| 10 | Score de saúde financeira |
+
+#### Fase 3 — Avançado
+
+| # | Feature |
+|---|---|
+| 11 | Waterfall chart (fluxo income → categorias → saldo) |
+| 12 | Simulador "e se" (cortar categoria X → impacto no savings) |
+| 13 | Cash flow projetado (6–12 meses) |
+| 14 | Sankey diagram (fluxo de dinheiro completo) |
+| 15 | Range de datas customizado em todos os filtros |
+
+---
+
+## 13. Frontend — Design para Analytics Intuitivo
+
+> Seção adicionada em 2026-04-09. Análise detalhada de como reestruturar o frontend para que todas as funcionalidades de análise avançada (seção 12) sejam descobríveis, compreensíveis e agradáveis de usar — sem sobrecarregar o usuário.
+
+---
+
+### O problema raiz: o Dashboard não escala
+
+O Dashboard hoje tem **10 seções em scroll vertical contínuo**, todas no mesmo nível visual. Adicionar métricas avançadas nesse modelo vai quebrar a experiência. Antes de adicionar qualquer feature nova, é necessário reorganizar a arquitetura de informação.
+
+**Diagnóstico por seção atual:**
+
+| Seção | Posição | Valor | Problema |
+|---|---|---|---|
+| Insight banners | 1ª | Alto | Até 4 banners empilhados, nenhum com prioridade visual clara |
+| Budget progress | 2ª (condicional) | Alto | Aparece no meio do fluxo, deveria ser destacado |
+| KPI cards (4) | 3ª | Alto | Correto, mas sem tendência temporal visível |
+| Gráfico 6 meses | 4ª | Alto | Duplo eixo Y confunde |
+| Categorias + Comparativo | 5ª (2 cols) | Alto | Boa estrutura, mas sem drill-down |
+| Top merchants + Acumulado | 6ª (2 cols) | Médio | Acumulado só serve para o mês atual |
+| Maiores gastos + Recentes | 7ª (2 cols) | Médio | "Recentes" mostra mês errado |
+
+**Regra geral:** o usuário chega no Dashboard com duas perguntas distintas — "como estou agora?" e "como estou no histórico?". Hoje essas perguntas são respondidas misturadas, sem separação clara.
+
+---
+
+### Solução: separar em modos de uso
+
+A mudança mais impactante não é adicionar um gráfico novo — é **separar o Dashboard em dois modos** via tabs no topo da página:
+
+```
+┌─────────────────────────────────────────────────────┐
+│  Dashboard                          [Conta+Cartão ▾] │
+│                                                      │
+│  [Visão Mensal]  [Análise Histórica]                 │
+│  ─────────────────────────────────────────────────   │
+│  (conteúdo muda conforme a aba selecionada)          │
+└─────────────────────────────────────────────────────┘
+```
+
+- **Visão Mensal** (tab padrão): o que existe hoje, reorganizado. Filtro de mês no topo.
+- **Análise Histórica**: rolling windows, comparação ano a ano, tendências, heatmap. Filtro de período.
+
+Isso resolve o problema sem criar uma nova página na sidebar (que aumentaria a carga cognitiva de navegação).
+
+---
+
+### Reestruturação da Visão Mensal
+
+#### Novo layout proposto (ordem de cima para baixo)
+
+**Bloco 1 — Contexto e alerta (sticky no topo)**
+```
+[Mês: Abril 2026 ▾]  [Conta+Cartão ▾]        [Alerta: 2 orçamentos próximos do limite ⚠]
+```
+- O alerta condensa todos os insights em um único indicador clicável
+- Clicar expande um painel lateral (drawer) com todos os insights detalhados
+- Remove os 4 banners empilhados que hoje quebram o ritmo visual
+
+**Bloco 2 — Score rápido + KPIs (acima da dobra)**
+```
+┌──────────────────┬──────────┬──────────┬──────────┬──────────┐
+│  Saúde: 74/100  │ Receitas │ Despesas │  Saldo   │ Poupança │
+│  ████████░░ Bom │ R$4.200  │ R$2.800  │ R$1.400  │  33,3%   │
+│  [ver detalhes] │  +5% ↑   │  -8% ↓   │  verde   │  ✓ meta  │
+└──────────────────┴──────────┴──────────┴──────────┴──────────┘
+```
+- O score de saúde financeira ocupa o primeiro card (5 cols total)
+- Clicar no score abre um modal com o breakdown explicado
+- Os 4 KPIs existentes ficam inalterados
+
+**Bloco 3 — Progresso do mês (novo, crítico)**
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Ritmo do mês                                               │
+│  Dia 9 de 30 (30%)  ████░░░░░░░░░░░░░░░░░░░░░░░░░░░░ 30%  │
+│  Gasto: R$890  ·  Pace: R$99/dia  ·  Projeção: R$2.970     │
+│  ▲ 14% acima da sua média histórica (R$2.600/mês)          │
+└─────────────────────────────────────────────────────────────┘
+```
+- Card de largura total, fino (height ~56px)
+- Responde à pergunta "estou acelerado?" imediatamente
+- Sempre visível para o mês corrente; oculto para meses passados
+
+**Bloco 4 — Orçamentos (reorganizado)**
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Orçamentos do mês                              [gerenciar] │
+│                                                             │
+│  Alimentação  R$890 / R$1.000  ████████████░░  89% ⚠       │
+│  Transporte   R$310 / R$400    █████████░░░░░  78%         │
+│  Lazer        R$120 / R$300    ████░░░░░░░░░░  40% ✓       │
+└─────────────────────────────────────────────────────────────┘
+```
+- Sobe de posição (hoje está na 2ª seção, mas condicionalmente)
+- Sempre visível se houver orçamentos, independente de metas ativas
+- Link "gerenciar" leva para Configurações → seção de budgets
+
+**Bloco 5 — Gráfico principal (refatorado)**
+
+Separar o ComposedChart em dois cards:
+```
+┌──────────────────────────────┬───────────────────────────────┐
+│  Receitas vs Despesas        │  Saldo Líquido               │
+│  (bar chart, 6 meses)        │  (area chart, 6 meses)       │
+│  [tab: 3m | 6m | 12m]       │  [tab: 3m | 6m | 12m]       │
+└──────────────────────────────┴───────────────────────────────┘
+```
+- Elimina o duplo eixo Y
+- Tabs de período (3, 6, 12 meses) dentro de cada card
+- Ambos os gráficos sincronizados pelo mesmo período selecionado
+
+**Bloco 6 — Análise de categorias (com drill-down)**
+```
+┌──────────────────────────────┬───────────────────────────────┐
+│  Gastos por Categoria        │  vs. Mês Anterior            │
+│                              │                               │
+│  [Clicável → abre detalhe]  │  Tabela igual à atual        │
+│  Alimentação  R$890  34% →  │  + coluna de tendência       │
+│  Transporte   R$310  12% →  │    (↑↑ muito acima, ↓ ok)    │
+└──────────────────────────────┴───────────────────────────────┘
+```
+- Cada categoria é clicável
+- Clicar abre um **painel lateral (sheet)** com:
+  - Histórico da categoria (6 meses, mini-chart)
+  - Média histórica vs. atual
+  - Top 5 merchants dessa categoria
+  - Lista de transações do mês filtradas por ela
+- Não navega para outra página — o contexto principal fica visível
+
+**Bloco 7 — Merchants + Recentes (reorganizado)**
+```
+┌──────────────────────────────┬───────────────────────────────┐
+│  Top Estabelecimentos        │  Transações do Mês           │
+│  (igual ao atual)            │  (filtrado pelo mês atual)   │
+│                              │  + busca rápida              │
+└──────────────────────────────┴───────────────────────────────┘
+```
+- Corrige o bug das Recentes mostrando o mês errado
+- Adiciona campo de busca inline nas transações
+- Remove a curva de acumulado diário (vai para aba Análise Histórica)
+
+---
+
+### Nova aba: Análise Histórica
+
+Esta aba resolve todas as métricas de longo prazo sem sobrecarregar a visão mensal.
+
+#### Controle de período (elemento central)
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Período:  [3 meses] [6 meses] [12 meses] [Este ano] [↔]   │
+│            ↑ padrão                                [custom] │
+└─────────────────────────────────────────────────────────────┘
+```
+- Persiste a seleção entre navegações (localStorage)
+- Botão `↔` abre date-picker de range (dois calendários, início e fim)
+- Todos os gráficos e métricas da aba respondem a esse seletor
+
+#### Layout da aba
+
+**Bloco 1 — Tendência do Savings Rate**
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Taxa de Poupança — últimos 12 meses                        │
+│  Média: 28,4%  ·  Tendência: ↑ crescendo  ·  Meta: 20% ✓  │
+│                                                             │
+│  [line chart com linha de meta tracejada]                   │
+│  jan  fev  mar  abr  mai  jun  jul  ago  set  out  nov  dez │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Bloco 2 — Evolução por categoria (médias móveis)**
+```
+┌──────────────────────────────┬───────────────────────────────┐
+│  Tendência por Categoria     │  Volatilidade                │
+│                              │                               │
+│  [dropdown: selecionar cat] │  Categorias mais instáveis:  │
+│  [line chart comparativo]   │  1. Lazer      ±R$280        │
+│  Mostra: média + mês atual  │  2. Alimentação ±R$190       │
+└──────────────────────────────┴───────────────────────────────┘
+```
+
+**Bloco 3 — Heatmap de gastos**
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Intensidade de Gastos por Dia                              │
+│                                                             │
+│       Jan  Fev  Mar  Abr  Mai  Jun                         │
+│  D01  ░░   ██   ░░   ▓▓   ░░   --                          │
+│  D05  ▓▓   ░░   ██   ░░   ▓▓   --                          │
+│  D10  ░░   ░░   ░░   ▓▓   ██   --                          │
+│  ...                                                        │
+│  Escala: ░ baixo  ▓ médio  █ alto                           │
+└─────────────────────────────────────────────────────────────┘
+```
+- Permite ver padrões sazonais (todo dia 10 você gasta mais → dia de boleto)
+- Hover mostra tooltip com valor e principais gastos do dia
+
+**Bloco 4 — Comparação ano a ano**
+```
+┌──────────────────────────────┬───────────────────────────────┐
+│  Este mês vs. mesmo mês      │  Retrospectiva Anual         │
+│  do ano anterior             │                               │
+│                              │  Melhor mês: jun/2025        │
+│  Abr/2026  R$2.800 despesas │  Pior mês:   dez/2025        │
+│  Abr/2025  R$2.400 despesas │  Total gasto 2025: R$31.200  │
+│  Diferença: +R$400 (+16%)   │  Total poupado: R$8.400      │
+└──────────────────────────────┴───────────────────────────────┘
+```
+
+**Bloco 5 — Projeções**
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Se você mantiver o ritmo atual...                          │
+│                                                             │
+│  Em 3 meses:  poupança acumulada R$ 4.200                  │
+│  Em 12 meses: poupança acumulada R$16.800                  │
+│  Meta de R$ 20.000: atingida em fev/2027                   │
+│                                                             │
+│  [area chart com projeção tracejada após hoje]             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### Nova página na sidebar: Relatórios
+
+Além das tabs no Dashboard, uma página **Relatórios** na sidebar para análises sob demanda — diferente do Dashboard (que é operacional e se atualiza com o tempo), Relatórios é exploratório.
+
+**Quando o usuário vai até lá:** quando quer responder uma pergunta específica, não apenas ver o estado atual.
+
+#### Estrutura da página
+
+```
+Relatórios
+────────────────────────────────────────────────
+[Período: último trimestre ▾]  [Conta+Cartão ▾]
+
+Score de Saúde Financeira
+  ┌──────────────────────────────────────┐
+  │  74 / 100  ████████████░░░░  Bom    │
+  │                                      │
+  │  Savings rate ≥ 20%    25pts ✓       │
+  │  Reserva ≥ 3 meses     25pts ✓       │
+  │  Metas no orçamento    12pts ⚠ (60%) │
+  │  Savings crescendo     15pts ✓       │
+  │  Investimentos ativos   0pts ✗       │
+  └──────────────────────────────────────┘
+
+Meses de Reserva de Emergência
+  Saldo: R$12.400  ÷  Gasto médio: R$2.650  =  4,7 meses ✓
+
+Waterfall — Como seu dinheiro fluiu
+  [waterfall chart: receita → categoria1 → categoria2 → ... → saldo]
+
+Recorrentes Detectados
+  Netflix R$55,90  · Spotify R$21,90  · Academia R$120  · ...
+  Total mensal fixo identificado: R$892
+
+Comparador de Períodos
+  [Período A: __/__  ×  Período B: __/__]  [Comparar]
+  [tabela lado a lado com delta]
+```
+
+---
+
+### Componentes de UI necessários (novos)
+
+| Componente | Descrição | Reutilização |
+|---|---|---|
+| `<PeriodSelector>` | Tabs de período (3m/6m/12m/ano/custom) com date-range picker | Global — todas as páginas analíticas |
+| `<HealthScoreCard>` | Card com nota 0–100, barra de progresso, breakdown clicável | Dashboard + Relatórios |
+| `<MonthPaceBar>` | Barra fina de progresso do mês + burn rate + projeção | Dashboard — Visão Mensal |
+| `<CategorySheet>` | Painel lateral deslizante com detalhes de categoria | Dashboard (on-click) |
+| `<InsightDrawer>` | Drawer com todos os insights expandidos | Dashboard (bell/alert button) |
+| `<SpendingHeatmap>` | Tabela estilizada com gradiente de cor por intensidade | Análise Histórica |
+| `<WaterfallChart>` | Recharts customizado para waterfall (income → saldo) | Relatórios |
+| `<ProjectionChart>` | Area chart com linha real + linha tracejada futura | Análise Histórica + Relatórios |
+| `<PeriodComparator>` | Dois selectors de mês + tabela comparativa lado a lado | Relatórios |
+| `<RecurringList>` | Lista de recorrentes detectados com valor e frequência | Relatórios + Dashboard |
+
+---
+
+### Padrões de interação para não sobrecarregar
+
+#### Progressive disclosure (regra central)
+
+Nenhuma feature avançada deve aparecer na "primeira tela" sem ação do usuário. A hierarquia é:
+
+```
+Nível 1 (visível por padrão):
+  → KPIs principais, orçamentos, alertas resumidos, gráfico mensal
+
+Nível 2 (um clique):
+  → Score detalhado (clique no card de saúde)
+  → Insights expandidos (clique no alerta do header)
+  → Detalhe de categoria (clique na linha da categoria)
+  → Análise histórica (clique na tab "Análise Histórica")
+
+Nível 3 (dois cliques):
+  → Transações filtradas por categoria (dentro do CategorySheet)
+  → Simulador "e se" (dentro da seção de Projeções)
+  → Comparador de períodos customizados (dentro de Relatórios)
+```
+
+#### Drill-down sem saída de página
+
+Usar `<Sheet>` (painel lateral deslizante) para detalhes, não navegação. O usuário mantém o contexto do dashboard enquanto explora um detalhe. Só navega para outra página quando quer fechar o contexto completamente.
+
+```
+Dashboard (contexto principal)
+  └── [clica em "Alimentação"]
+      └── Sheet lateral abre com:
+          - histórico de Alimentação (6 meses)
+          - merchants desta categoria
+          - transações do mês
+          [clica em uma transação]
+              └── linha expande inline com detalhes
+```
+
+#### Tooltips contextuais em métricas novas
+
+Toda métrica não-óbvia deve ter um `(?)` ao lado que, ao hover, explica o cálculo:
+
+```
+Meses de Reserva  4,7 (?)
+                  ┌─────────────────────────────┐
+                  │ Saldo total ÷ gasto médio   │
+                  │ R$12.400 ÷ R$2.650 = 4,7   │
+                  │ Recomendado: mínimo 3 meses │
+                  └─────────────────────────────┘
+```
+
+#### Indicadores de tendência em vez de apenas números
+
+Todo número que tem histórico deve mostrar direção:
+
+```
+Alimentação  R$890  ↑8% vs. sua média de 6 meses
+                    (não apenas vs. mês anterior)
+```
+
+---
+
+### Reorganização da Sidebar
+
+Adicionar "Relatórios" sem sobrecarregar a navegação:
+
+```
+Sidebar atual (6 itens):          Sidebar proposta (7 itens):
+  Dashboard                         Dashboard
+  Transações                        Transações
+  Categorias               →        Categorias
+  Investimentos                     Investimentos
+  Importar                          Relatórios         ← novo
+  Configurações                     Importar
+                                    Configurações
+```
+
+"Categorias" pode ser absorvida dentro de "Relatórios" futuramente, mas por ora mantém a separação para não quebrar fluxo existente.
+
+---
+
+### Mapeamento feature → localização na UI
+
+| Feature (Seção 12) | Onde aparece | Como é acessada |
+|---|---|---|
+| Projeção de fim de mês | Dashboard — Visão Mensal | Bloco 3 (MonthPaceBar), sempre visível |
+| Meses de reserva | Dashboard — Visão Mensal | Card KPI adicional **ou** Relatórios |
+| Score de saúde | Dashboard — Visão Mensal | Card KPI (clicável para detalhes) |
+| Orçamentos refatorados | Dashboard — Visão Mensal | Bloco 4, sempre visível |
+| Drill-down de categoria | Dashboard — Visão Mensal | Sheet lateral ao clicar na categoria |
+| Tendência savings rate | Dashboard — Análise Histórica | Bloco 1 da aba |
+| Médias móveis | Dashboard — Análise Histórica | Bloco 2 da aba |
+| Heatmap | Dashboard — Análise Histórica | Bloco 3 da aba |
+| Comparação ano a ano | Dashboard — Análise Histórica | Bloco 4 da aba |
+| Projeções longas | Dashboard — Análise Histórica | Bloco 5 da aba |
+| Waterfall chart | Relatórios | Seção principal |
+| Recorrentes detectados | Relatórios | Seção dedicada |
+| Comparador de períodos | Relatórios | Seção dedicada |
+| Score detalhado | Relatórios | Seção de saúde financeira |
+| Detecção recorrentes | Relatórios | Seção dedicada |
+
+---
+
+### Ordem de implementação sugerida (frontend-first)
+
+Implementar na ordem que gera valor visível mais rápido:
+
+1. **`<MonthPaceBar>`** — 1 componente novo, dados já disponíveis, altíssima utilidade diária
+2. **Corrigir "Transações Recentes"** — 1 linha de código, bug crítico
+3. **Tabs no Dashboard** (Visão Mensal | Análise Histórica) — estrutura que desbloqueia tudo
+4. **`<CategorySheet>`** com drill-down — alto impacto, reutiliza dados existentes
+5. **`<HealthScoreCard>`** — fórmula simples, diferencial visual forte
+6. **Gráfico de tendência (savings rate)** — dentro da aba Análise Histórica
+7. **`<SpendingHeatmap>`** — component novo, dados disponíveis
+8. **Página Relatórios** + `<PeriodSelector>` global
+9. **`<ProjectionChart>`** com linha tracejada
+10. **`<WaterfallChart>`** + `<RecurringList>`
 
 ---
 

@@ -6,6 +6,7 @@ import {
   TrendingUp,
   Upload,
   Settings,
+  FileBarChart2,
 } from 'lucide-react'
 
 const navItems = [
@@ -13,6 +14,7 @@ const navItems = [
   { to: '/transactions', label: 'Transações', icon: List },
   { to: '/categories', label: 'Categorias', icon: PieChart },
   { to: '/investments', label: 'Investimentos', icon: TrendingUp },
+  { to: '/reports', label: 'Relatórios', icon: FileBarChart2 },
   { to: '/import', label: 'Importar', icon: Upload },
   { to: '/settings', label: 'Configurações', icon: Settings },
 ]
