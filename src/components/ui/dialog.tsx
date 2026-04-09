@@ -58,11 +58,16 @@ function DialogHeader({ children }: { children?: React.ReactNode }) {
 function DialogTitle({
   className,
   children,
-}: {
-  className?: string
-  children?: React.ReactNode
-}) {
-  return <h2 className={cn('text-lg font-semibold leading-none', className)}>{children}</h2>
+  ...props
+}: React.HTMLAttributes<HTMLHeadingElement>) {
+  return (
+    <h2
+      className={cn('text-lg font-semibold leading-none', className)}
+      {...props}
+    >
+      {children}
+    </h2>
+  )
 }
 
 function DialogFooter({ children }: { children?: React.ReactNode }) {
