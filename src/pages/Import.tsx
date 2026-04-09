@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo } from 'react'
 import { parseOFX } from '@/lib/ofx/parser'
+import { parsePicPayPDF } from '@/lib/ofx/picpay-parser'
 import { classifyTransaction } from '@/lib/ofx/classifier'
 import { useTransactionStore } from '@/store/useTransactionStore'
 import type { ImportPreviewItem } from '@/types'
@@ -56,11 +57,10 @@ export default function ImportPage() {
       }
 
       files.forEach((file) => {
-        const reader = new FileReader()
-        reader.onload = (e) => {
+        const isPDF = file.name.toLowerCase().endsWith('.pdf')
+
+        const handleParsed = (parsed: import('@/types').OFXParseResult) => {
           try {
-            const raw = e.target?.result as string
-            const parsed = parseOFX(raw)
             infos.push({ name: file.name, type: parsed.fileType })
             parsed.transactions.forEach((rawTx) => {
               allItems.push({
@@ -75,14 +75,44 @@ export default function ImportPage() {
             })
           } catch (err) {
             errored++
-            toast.error(`Erro ao processar "${file.name}". Verifique se é um arquivo OFX válido.`)
+            toast.error(`Erro ao processar "${file.name}".`)
             console.error(err)
           } finally {
             completed++
             if (completed === files.length) finish()
           }
         }
-        reader.readAsText(file, 'UTF-8')
+
+        if (isPDF) {
+          const reader = new FileReader()
+          reader.onload = (e) => {
+            parsePicPayPDF(e.target!.result as ArrayBuffer)
+              .then(handleParsed)
+              .catch((err) => {
+                errored++
+                toast.error(`Erro ao processar "${file.name}". Verifique se é um extrato PicPay válido.`)
+                console.error(err)
+                completed++
+                if (completed === files.length) finish()
+              })
+          }
+          reader.readAsArrayBuffer(file)
+        } else {
+          const reader = new FileReader()
+          reader.onload = (e) => {
+            try {
+              const raw = e.target?.result as string
+              handleParsed(parseOFX(raw))
+            } catch (err) {
+              errored++
+              toast.error(`Erro ao processar "${file.name}". Verifique se é um arquivo OFX válido.`)
+              console.error(err)
+              completed++
+              if (completed === files.length) finish()
+            }
+          }
+          reader.readAsText(file, 'UTF-8')
+        }
       })
     },
     [existingFITIDs, settings],
@@ -92,7 +122,7 @@ export default function ImportPage() {
     (e: React.DragEvent) => {
       e.preventDefault()
       setDragging(false)
-      const files = Array.from(e.dataTransfer.files).filter((f) => f.name.endsWith('.ofx'))
+      const files = Array.from(e.dataTransfer.files).filter((f) => f.name.endsWith('.ofx') || f.name.endsWith('.pdf'))
       if (files.length > 0) processFiles(files)
     },
     [processFiles],
@@ -127,9 +157,9 @@ export default function ImportPage() {
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold">Importar Extrato OFX</h1>
+        <h1 className="text-2xl font-semibold">Importar Extrato</h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Arraste ou selecione um ou mais arquivos .ofx exportados do Nubank (conta corrente ou cartão).
+          Suporta arquivos <strong>.ofx</strong> do Nubank (conta corrente ou cartão) e <strong>.pdf</strong> de extrato do PicPay.
         </p>
       </div>
 
@@ -163,11 +193,11 @@ export default function ImportPage() {
         >
           <Upload className="mx-auto mb-3 text-muted-foreground" size={40} />
           <p className="font-medium">Solte os arquivos aqui ou clique para selecionar</p>
-          <p className="text-muted-foreground text-sm mt-1">Suporta múltiplos .ofx (conta corrente e cartão de crédito)</p>
+          <p className="text-muted-foreground text-sm mt-1">Nubank: múltiplos .ofx — PicPay: .pdf do extrato de conta</p>
           <input
             id="ofx-input"
             type="file"
-            accept=".ofx"
+            accept=".ofx,.pdf"
             multiple
             className="hidden"
             onChange={handleFileInput}
@@ -186,7 +216,7 @@ export default function ImportPage() {
                   <span key={i} className="flex items-center gap-1">
                     <span className="font-medium">{fi.name}</span>
                     <Badge variant="outline">
-                      {fi.type === 'account' ? 'Conta Corrente' : 'Cartão'}
+                      {fi.name.endsWith('.pdf') ? 'PicPay' : fi.type === 'account' ? 'Conta Corrente' : 'Cartão'}
                     </Badge>
                   </span>
                 ))}
