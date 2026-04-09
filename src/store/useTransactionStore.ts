@@ -16,7 +16,7 @@ import {
   type ExportData,
 } from '@/lib/db'
 import { linkTransactions } from '@/lib/ofx/linker'
-import { extractLearnedPattern } from '@/lib/utils/categories'
+import { categorizeByMemo, extractLearnedPattern } from '@/lib/utils/categories'
 import type { CategoryRule } from '@/types'
 
 interface TransactionStore {
@@ -144,11 +144,12 @@ export const useTransactionStore = create<TransactionStore>((set, get) => ({
   },
 
   addLearnedRule: async (pattern, category) => {
-    const { settings } = get()
+    const { settings, transactions } = get()
     const alreadyExists = settings.customCategoryRules.some(
       (r) => r.pattern.toLowerCase() === pattern.toLowerCase(),
     )
     if (alreadyExists) return
+
     const newRule: CategoryRule = {
       id: `learned-${crypto.randomUUID()}`,
       pattern,
@@ -162,6 +163,29 @@ export const useTransactionStore = create<TransactionStore>((set, get) => ({
     }
     await saveSettings(newSettings)
     set({ settings: newSettings })
+
+    // Re-classifica transações não manuais que estão como "Outros"
+    const toReclassify = transactions.filter(
+      (t) => !t.manualCategory && t.category === 'Outros',
+    )
+    if (toReclassify.length === 0) return
+
+    const updated: Transaction[] = []
+    for (const t of toReclassify) {
+      const newCategory = categorizeByMemo(t.memo, newSettings.customCategoryRules)
+      if (newCategory !== 'Outros') {
+        updated.push({ ...t, category: newCategory })
+      }
+    }
+    if (updated.length === 0) return
+
+    await upsertTransactions(updated)
+    set((s) => ({
+      transactions: s.transactions.map((t) => {
+        const u = updated.find((u) => u.id === t.id)
+        return u ?? t
+      }),
+    }))
   },
 
   updateSettings: async (settings) => {
