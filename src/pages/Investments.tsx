@@ -36,6 +36,87 @@ import { toast } from 'sonner'
 
 const PRODUCTS = ['RDB', 'CDB', 'LCI', 'LCA', 'Tesouro Direto', 'Fundo', 'Investimento']
 
+// ── IR (Imposto de Renda) ────────────────────────────────────────────────────
+// LCI e LCA são isentos de IR para pessoa física
+const IR_EXEMPT = new Set(['LCI', 'LCA'])
+
+// Tabela regressiva de IR sobre renda fixa
+function irRate(days: number): number {
+  if (days <= 180) return 0.225
+  if (days <= 360) return 0.20
+  if (days <= 720) return 0.175
+  return 0.15
+}
+
+function daysBetween(from: string, to: string): number {
+  return Math.max(
+    0,
+    Math.floor((new Date(to).getTime() - new Date(from).getTime()) / 86400000),
+  )
+}
+
+interface IRCalc {
+  grossYields: number
+  estimatedIR: number
+  netYields: number
+  effectiveRate: number
+}
+
+// Calcula IR estimado usando FIFO nos lotes de aplicação.
+// Rendimentos são atribuídos proporcionalmente ao capital de cada lote.
+function calcProductIR(
+  records: { date: string; type: string; amount: number }[],
+  today: string,
+): IRCalc {
+  const apps = records
+    .filter((r) => r.type === 'application')
+    .sort((a, b) => a.date.localeCompare(b.date))
+  const wds = records
+    .filter((r) => r.type === 'withdrawal')
+    .sort((a, b) => a.date.localeCompare(b.date))
+  const grossYields = records
+    .filter((r) => r.type === 'yield')
+    .reduce((s, r) => s + r.amount, 0)
+  const totalApplied = apps.reduce((s, a) => s + a.amount, 0)
+
+  if (grossYields === 0 || totalApplied === 0)
+    return { grossYields, estimatedIR: 0, netYields: grossYields, effectiveRate: 0 }
+
+  // Fila FIFO de lotes
+  const lots = apps.map((a) => ({ date: a.date, total: a.amount, remaining: a.amount }))
+
+  let estimatedIR = 0
+
+  // Processa resgates (FIFO): calcula IR sobre a fração do rendimento realizado
+  for (const w of wds) {
+    let left = w.amount
+    while (left > 0 && lots.length > 0) {
+      const lot = lots[0]
+      const used = Math.min(left, lot.remaining)
+      // Fração do rendimento total atribuída a esta parcela resgatada
+      const yieldShare = grossYields * (lot.total / totalApplied) * (used / lot.total)
+      estimatedIR += yieldShare * irRate(daysBetween(lot.date, w.date))
+      lot.remaining -= used
+      left -= used
+      if (lot.remaining <= 0) lots.shift()
+    }
+  }
+
+  // Lotes ainda ativos: IR calculado como se resgatado hoje
+  for (const lot of lots) {
+    if (lot.remaining <= 0) continue
+    const yieldShare = grossYields * (lot.total / totalApplied) * (lot.remaining / lot.total)
+    estimatedIR += yieldShare * irRate(daysBetween(lot.date, today))
+  }
+
+  return {
+    grossYields,
+    estimatedIR: +estimatedIR.toFixed(2),
+    netYields: +(grossYields - estimatedIR).toFixed(2),
+    effectiveRate: grossYields > 0 ? estimatedIR / grossYields : 0,
+  }
+}
+
 export default function InvestmentsPage() {
   const { investments, addYield, deleteInvestment } = useTransactionStore()
 
@@ -154,16 +235,35 @@ export default function InvestmentsPage() {
       else map[i.product].yields += i.amount
     }
     return Object.entries(map)
-      .map(([prod, v]) => ({
-        product: prod,
-        applied: v.applied,
-        withdrawn: v.withdrawn,
-        yields: v.yields,
-        balance: +(v.applied - v.withdrawn + v.yields).toFixed(2),
-        pct: v.applied > 0 ? +((v.yields / v.applied) * 100).toFixed(2) : 0,
-      }))
+      .map(([prod, v]) => {
+        const irCalc = IR_EXEMPT.has(prod)
+          ? null
+          : calcProductIR(filtered.filter((r) => r.product === prod), today)
+        return {
+          product: prod,
+          applied: v.applied,
+          withdrawn: v.withdrawn,
+          yields: v.yields,
+          balance: +(v.applied - v.withdrawn + v.yields).toFixed(2),
+          pct: v.applied > 0 ? +((v.yields / v.applied) * 100).toFixed(2) : 0,
+          ir: irCalc ? irCalc.estimatedIR : null,
+          netYields: irCalc ? irCalc.netYields : null,
+          effectiveRate: irCalc ? irCalc.effectiveRate : null,
+          irExempt: IR_EXEMPT.has(prod),
+        }
+      })
       .sort((a, b) => b.balance - a.balance)
-  }, [filtered])
+  }, [filtered, today])
+
+  // ── Totais de IR ─────────────────────────────────────────────────────────────
+  const totalIR = useMemo(
+    () => byProduct.reduce((s, p) => s + (p.ir ?? 0), 0),
+    [byProduct],
+  )
+  const totalNetYields = +(totalYields - totalIR).toFixed(2)
+  const hasIRData = totalIR > 0
+
+  const today = useMemo(() => new Date().toISOString().slice(0, 10), [])
 
   // ── Dialog handlers ──────────────────────────────────────────────────────────
   function openDialog() {
@@ -287,6 +387,50 @@ export default function InvestmentsPage() {
         </Card>
       </div>
 
+      {/* IR Estimado */}
+      {hasIRData && (
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-muted-foreground">Imposto de Renda Estimado</span>
+            <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border border-amber-200 dark:border-amber-800">
+              Tabela regressiva · FIFO
+            </span>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Card>
+              <CardContent className="pt-5 pb-4">
+                <div className="text-sm text-muted-foreground mb-1">Rend. bruto</div>
+                <div className="text-xl font-bold text-green-600">{formatCurrency(totalYields)}</div>
+                <div className="text-xs text-muted-foreground mt-0.5">antes do IR</div>
+              </CardContent>
+            </Card>
+            <Card className="border-red-200 dark:border-red-900">
+              <CardContent className="pt-5 pb-4">
+                <div className="text-sm text-muted-foreground mb-1">IR estimado</div>
+                <div className="text-xl font-bold text-red-500">−{formatCurrency(totalIR)}</div>
+                <div className="text-xs text-muted-foreground mt-0.5">descontado no resgate</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-5 pb-4">
+                <div className="text-sm text-muted-foreground mb-1">Rend. líquido</div>
+                <div className="text-xl font-bold text-green-600">{formatCurrency(totalNetYields)}</div>
+                <div className="text-xs text-muted-foreground mt-0.5">após IR</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-5 pb-4">
+                <div className="text-sm text-muted-foreground mb-1">Alíquota efetiva</div>
+                <div className="text-xl font-bold">
+                  {totalYields > 0 ? ((totalIR / totalYields) * 100).toFixed(1) : '0.0'}%
+                </div>
+                <div className="text-xs text-muted-foreground mt-0.5">sobre rendimentos brutos</div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      )}
+
       {/* KPIs secundários de rendimento */}
       {totalYields > 0 && (
         <div className="grid grid-cols-3 gap-4">
@@ -390,7 +534,9 @@ export default function InvestmentsPage() {
                   <th className="text-left px-4 py-2 font-medium text-muted-foreground">Produto</th>
                   <th className="text-right px-4 py-2 font-medium text-muted-foreground">Aplicado</th>
                   <th className="text-right px-4 py-2 font-medium text-muted-foreground">Resgatado</th>
-                  <th className="text-right px-4 py-2 font-medium text-muted-foreground">Rendimentos</th>
+                  <th className="text-right px-4 py-2 font-medium text-muted-foreground">Rend. Bruto</th>
+                  <th className="text-right px-4 py-2 font-medium text-muted-foreground">IR Est.</th>
+                  <th className="text-right px-4 py-2 font-medium text-muted-foreground">Rend. Líq.</th>
                   <th className="text-right px-4 py-2 font-medium text-muted-foreground">Saldo</th>
                   <th className="text-right px-4 py-2 font-medium text-muted-foreground">Rent.</th>
                 </tr>
@@ -398,10 +544,37 @@ export default function InvestmentsPage() {
               <tbody>
                 {byProduct.map((row) => (
                   <tr key={row.product} className="border-b last:border-0 hover:bg-muted/30">
-                    <td className="px-4 py-2 font-medium">{row.product}</td>
+                    <td className="px-4 py-2 font-medium">
+                      <span>{row.product}</span>
+                      {row.irExempt && (
+                        <span className="ml-1.5 text-xs px-1.5 py-0.5 rounded bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                          isento
+                        </span>
+                      )}
+                    </td>
                     <td className="px-4 py-2 text-right font-mono text-blue-600">{formatCurrency(row.applied)}</td>
                     <td className="px-4 py-2 text-right font-mono text-amber-600">{formatCurrency(row.withdrawn)}</td>
                     <td className="px-4 py-2 text-right font-mono text-green-600">{formatCurrency(row.yields)}</td>
+                    <td className="px-4 py-2 text-right font-mono text-red-500">
+                      {row.irExempt
+                        ? <span className="text-muted-foreground">—</span>
+                        : row.ir != null && row.ir > 0
+                          ? (
+                            <span title={`Alíquota efetiva: ${((row.effectiveRate ?? 0) * 100).toFixed(1)}%`}>
+                              −{formatCurrency(row.ir)}
+                            </span>
+                          )
+                          : <span className="text-muted-foreground">—</span>
+                      }
+                    </td>
+                    <td className="px-4 py-2 text-right font-mono text-green-600">
+                      {row.irExempt
+                        ? formatCurrency(row.yields)
+                        : row.netYields != null
+                          ? formatCurrency(row.netYields)
+                          : '—'
+                      }
+                    </td>
                     <td className="px-4 py-2 text-right font-mono font-semibold">{formatCurrency(row.balance)}</td>
                     <td className="px-4 py-2 text-right font-mono text-green-600">
                       {row.pct > 0 ? `${row.pct}%` : '—'}

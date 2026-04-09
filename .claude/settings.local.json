@@ -35,7 +35,9 @@
       "Bash(xargs grep:*)",
       "Bash(node -e ':*)",
       "Bash(npx vite:*)",
-      "Bash(echo \"exit: $?\")"
+      "Bash(echo \"exit: $?\")",
+      "Bash(/c/Python312/python -)",
+      "Bash(cmd:*)"
     ]
   }
 }
