@@ -92,6 +92,11 @@ export async function upsertInvestments(items: InvestmentRecord[]): Promise<void
   await Promise.all([...items.map((i) => tx.store.put(i)), tx.done])
 }
 
+export async function deleteInvestment(id: string): Promise<void> {
+  const db = await getDB()
+  await db.delete('investments', id)
+}
+
 // ────────────────────────── Settings ──────────────────────────
 
 const SETTINGS_KEY = 'app-settings'

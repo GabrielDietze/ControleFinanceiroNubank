@@ -27,9 +27,9 @@ export interface Transaction {
 }
 
 export interface InvestmentRecord {
-  id: string // FITID
+  id: string // FITID ou gerado para rendimentos manuais
   date: string
-  type: 'application' | 'withdrawal'
+  type: 'application' | 'withdrawal' | 'yield'
   amount: number // sempre positivo
   product: string // "RDB", etc.
 }

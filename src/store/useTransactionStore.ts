@@ -6,6 +6,7 @@ import {
   updateTransaction as dbUpdateTransaction,
   getAllInvestments,
   upsertInvestments,
+  deleteInvestment as dbDeleteInvestment,
   getSettings,
   saveSettings,
   getExistingFITIDs,
@@ -42,6 +43,12 @@ interface TransactionStore {
   // Export / Import
   exportData: () => Promise<ExportData>
   importData: (data: ExportData) => Promise<{ addedTransactions: number; addedInvestments: number }>
+
+  // Adiciona rendimento manual
+  addYield: (record: Omit<InvestmentRecord, 'id'>) => Promise<void>
+
+  // Remove registro de investimento (apenas rendimentos manuais)
+  deleteInvestment: (id: string) => Promise<void>
 
   // IDs existentes para dedup no preview
   existingFITIDs: () => Set<string>
@@ -150,6 +157,18 @@ export const useTransactionStore = create<TransactionStore>((set, get) => ({
     ])
     set({ transactions, investments, settings })
     return result
+  },
+
+  addYield: async (record) => {
+    const id = `yield-${crypto.randomUUID()}`
+    const inv: InvestmentRecord = { ...record, id }
+    await upsertInvestments([inv])
+    set((s) => ({ investments: [...s.investments, inv] }))
+  },
+
+  deleteInvestment: async (id) => {
+    await dbDeleteInvestment(id)
+    set((s) => ({ investments: s.investments.filter((i) => i.id !== id) }))
   },
 
   existingFITIDs: () => new Set(get().transactions.map((t) => t.id)),
