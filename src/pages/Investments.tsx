@@ -225,6 +225,8 @@ export default function InvestmentsPage() {
       .map(([m, rendimento]) => ({ month: monthLabel(m), rendimento }))
   }, [filtered])
 
+  const today = useMemo(() => new Date().toISOString().slice(0, 10), [])
+
   // ── Breakdown por produto ────────────────────────────────────────────────────
   const byProduct = useMemo(() => {
     const map: Record<string, { applied: number; withdrawn: number; yields: number }> = {}
@@ -262,8 +264,6 @@ export default function InvestmentsPage() {
   )
   const totalNetYields = +(totalYields - totalIR).toFixed(2)
   const hasIRData = totalIR > 0
-
-  const today = useMemo(() => new Date().toISOString().slice(0, 10), [])
 
   // ── Dialog handlers ──────────────────────────────────────────────────────────
   function openDialog() {
