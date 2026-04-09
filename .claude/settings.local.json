@@ -34,7 +34,8 @@
       "Bash(node \"./node_modules/vite/bin/vite.js\" build)",
       "Bash(xargs grep:*)",
       "Bash(node -e ':*)",
-      "Bash(npx vite:*)"
+      "Bash(npx vite:*)",
+      "Bash(echo \"exit: $?\")"
     ]
   }
 }

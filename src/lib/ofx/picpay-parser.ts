@@ -1,4 +1,5 @@
 import type { OFXParseResult, RawOFXTransaction } from '@/types'
+import pdfWorkerUrl from 'pdfjs-dist/legacy/build/pdf.worker.mjs?url'
 
 /** Converte nome de mês em português para número (1-12) */
 const MONTH_MAP: Record<string, string> = {
@@ -75,7 +76,7 @@ function parsePageItems(
 
     // Ignora linhas de cabeçalho, rodapé e identificação do titular
     if (texts.includes('Hora') || texts.includes('Documento emitido em:')) continue
-    if (texts.some((t) => /^(Rubens|CPF:|PicPay Serviços|CNPJ:|Dias úteis|Período|Extrato de conta|Saldo final|de outubro|de abril|Agência)/.test(t))) continue
+    if (texts.some((t) => /^(Rubens|CPF:|PicPay Serviços|CNPJ:|Dias úteis|Período|Extrato de conta|Saldo final|Agência)/.test(t))) continue
     if (texts.some((t) => /^\d+ de \d+$/.test(t))) continue // "1 de 21"
 
     // Detecta linha de data do dia: x < 100, texto como "07 de abril 2026"
@@ -132,7 +133,7 @@ function parsePageItems(
 export async function parsePicPayPDF(arrayBuffer: ArrayBuffer): Promise<OFXParseResult> {
   // Importa pdfjs-dist dinamicamente para não aumentar o bundle inicial
   const pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.mjs')
-  pdfjsLib.GlobalWorkerOptions.workerSrc = ''
+  pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl
 
   const data = new Uint8Array(arrayBuffer)
   const pdf = await (pdfjsLib as unknown as typeof import('pdfjs-dist')).getDocument({
