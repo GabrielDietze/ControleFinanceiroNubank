@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -18,6 +18,7 @@ import {
   ReferenceLine,
 } from 'recharts'
 import type { Transaction } from '@/types'
+import { TransactionDetailDialog } from '@/components/ui/TransactionDetailDialog'
 
 interface Props {
   category: string | null
@@ -32,6 +33,7 @@ function merchantName(memo: string): string {
 }
 
 export function CategorySheet({ category, onClose, allTxs, currentMonth }: Props) {
+  const [detailTx, setDetailTx] = useState<Transaction | null>(null)
   const data = useMemo(() => {
     if (!category) return null
 
@@ -87,6 +89,7 @@ export function CategorySheet({ category, onClose, allTxs, currentMonth }: Props
   }, [category, allTxs, currentMonth])
 
   return (
+    <>
     <Dialog open={!!category} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
         <DialogClose onClick={onClose} />
@@ -161,7 +164,8 @@ export function CategorySheet({ category, onClose, allTxs, currentMonth }: Props
                   {data.txs.map((t) => (
                     <div
                       key={t.id}
-                      className="flex items-center justify-between text-xs py-1.5 border-b last:border-0"
+                      className="flex items-center justify-between text-xs py-1.5 border-b last:border-0 cursor-pointer hover:bg-muted/40 rounded px-1 -mx-1 transition-colors"
+                      onClick={() => setDetailTx(t)}
                     >
                       <div className="min-w-0">
                         <div className="truncate font-medium" title={t.memo}>
@@ -183,5 +187,11 @@ export function CategorySheet({ category, onClose, allTxs, currentMonth }: Props
         )}
       </DialogContent>
     </Dialog>
+
+    <TransactionDetailDialog
+      transaction={detailTx}
+      onClose={() => setDetailTx(null)}
+    />
+  </>
   )
 }

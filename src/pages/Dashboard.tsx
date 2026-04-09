@@ -42,6 +42,7 @@ import { MonthPaceBar } from '@/components/dashboard/MonthPaceBar'
 import { HealthScoreCard } from '@/components/dashboard/HealthScoreCard'
 import { InsightDrawer } from '@/components/dashboard/InsightDrawer'
 import { CategorySheet } from '@/components/dashboard/CategorySheet'
+import { TransactionListDialog } from '@/components/ui/TransactionListDialog'
 import { PeriodSelector, getMonthsForPeriod, type Period } from '@/components/dashboard/PeriodSelector'
 import { SpendingHeatmap } from '@/components/dashboard/SpendingHeatmap'
 import { ProjectionChart } from '@/components/dashboard/ProjectionChart'
@@ -101,6 +102,7 @@ export default function DashboardPage() {
   const [historicalPeriod, setHistoricalPeriod] = useState<Period>('6m')
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [trendCategory, setTrendCategory] = useState<string>('all')
+  const [txListDialog, setTxListDialog] = useState<'income' | 'expense' | null>(null)
 
   const effectiveMonth = months.includes(selectedMonth)
     ? selectedMonth
@@ -419,7 +421,7 @@ export default function DashboardPage() {
                 color="text-green-600"
                 delta={hasPrev ? deltaPercent(cur.income, prev.income) : null}
                 goodUp
-                onClick={() => navigate('/transactions')}
+                onClick={() => setTxListDialog('income')}
               />
               <KPICard
                 title="Despesas"
@@ -429,7 +431,7 @@ export default function DashboardPage() {
                 delta={hasPrev ? deltaPercent(cur.expense, prev.expense) : null}
                 goodUp={false}
                 subtitle={cur.expenseCount > 0 ? `${formatCurrency(avgDailySpend)}/dia · ${cur.expenseCount} transações` : undefined}
-                onClick={() => navigate('/transactions')}
+                onClick={() => setTxListDialog('expense')}
               />
               <KPICard
                 title="Saldo Líquido"
@@ -950,6 +952,20 @@ export default function DashboardPage() {
         onClose={() => setSelectedCategory(null)}
         allTxs={active}
         currentMonth={effectiveMonth}
+      />
+
+      {/* ── TransactionListDialog (receitas / despesas) ─────────────────────── */}
+      <TransactionListDialog
+        open={txListDialog === 'income'}
+        onClose={() => setTxListDialog(null)}
+        title={`Receitas — ${effectiveMonth}`}
+        transactions={monthTxs.filter((t) => t.amount > 0)}
+      />
+      <TransactionListDialog
+        open={txListDialog === 'expense'}
+        onClose={() => setTxListDialog(null)}
+        title={`Despesas — ${effectiveMonth}`}
+        transactions={monthTxs.filter((t) => t.amount < 0)}
       />
     </div>
   )

@@ -4,6 +4,7 @@ import { isFinanciallyActive } from '@/lib/ofx/classifier'
 import { formatCurrency } from '@/lib/utils/currency'
 import { isoMonthOf, monthLabel } from '@/lib/utils/date'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { CategorySheet } from '@/components/dashboard/CategorySheet'
 import {
   Select,
   SelectContent,
@@ -39,6 +40,7 @@ export default function CategoriesPage() {
 
   const [selectedMonth, setSelectedMonth] = useState(months[0] ?? '')
   const [source, setSource] = useState<Source>('all')
+  const [sheetCategory, setSheetCategory] = useState<string | null>(null)
   const effectiveMonth = months.includes(selectedMonth) ? selectedMonth : (months[0] ?? selectedMonth)
 
   const expenses = useMemo(
@@ -153,7 +155,11 @@ export default function CategoriesPage() {
               </thead>
               <tbody>
                 {byCategory.map((c, i) => (
-                  <tr key={c.name} className="border-b last:border-0">
+                  <tr
+                    key={c.name}
+                    className="border-b last:border-0 cursor-pointer hover:bg-muted/40 transition-colors"
+                    onClick={() => setSheetCategory(c.name)}
+                  >
                     <td className="px-4 py-2 flex items-center gap-2">
                       <span
                         className="w-2.5 h-2.5 rounded-full shrink-0"
@@ -183,6 +189,13 @@ export default function CategoriesPage() {
           </CardContent>
         </Card>
       </div>
+
+      <CategorySheet
+        category={sheetCategory}
+        onClose={() => setSheetCategory(null)}
+        allTxs={transactions}
+        currentMonth={effectiveMonth}
+      />
 
       {/* Comparativo mês a mês */}
       {comparison.length > 1 && topCats.length > 0 && (

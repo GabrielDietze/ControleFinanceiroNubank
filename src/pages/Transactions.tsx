@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
-import { toast } from 'sonner'
 import { useTransactionStore } from '@/store/useTransactionStore'
+import { useCategoryChange } from '@/hooks/useCategoryChange'
 import type { Transaction, TransactionType } from '@/types'
 import { formatCurrency } from '@/lib/utils/currency'
 import { formatDate } from '@/lib/utils/date'
@@ -23,9 +23,10 @@ const PAGE_SIZE = 50
 type SortField = 'date' | 'amount'
 
 export default function TransactionsPage() {
-  const { transactions, updateCategory, addLearnedRule, settings } = useTransactionStore()
+  const { transactions, settings } = useTransactionStore()
+  const { handleCategoryChange } = useCategoryChange()
   const allCategories = useMemo(
-    () => [...DEFAULT_CATEGORIES, ...(settings.customCategories ?? [])],
+    () => [...DEFAULT_CATEGORIES, ...(settings.customCategories ?? [])].sort((a, b) => a.localeCompare(b, 'pt')),
     [settings.customCategories],
   )
 
@@ -76,25 +77,9 @@ export default function TransactionsPage() {
     setPage(0)
   }
 
-  const handleCategoryChange = async (id: string, cat: string) => {
-    const result = await updateCategory(id, cat)
+  const onCategoryChange = async (id: string, cat: string) => {
+    await handleCategoryChange(id, cat)
     setEditingId(null)
-    if (result && !result.alreadyHasRule) {
-      const { pattern } = result
-      const label = pattern.length > 40 ? pattern.slice(0, 40) + '…' : pattern
-      toast(`Criar regra para "${label}"?`, {
-        description: `Futuras transações serão classificadas como "${cat}" automaticamente.`,
-        duration: 10000,
-        action: {
-          label: 'Criar regra',
-          onClick: () => addLearnedRule(pattern, cat),
-        },
-        cancel: {
-          label: 'Não',
-          onClick: () => {},
-        },
-      })
-    }
   }
 
   return (
@@ -204,7 +189,7 @@ export default function TransactionsPage() {
                     t={t}
                     isEditing={editingId === t.id}
                     onEditStart={() => setEditingId(t.id)}
-                    onCategoryChange={(cat) => handleCategoryChange(t.id, cat)}
+                    onCategoryChange={(cat) => onCategoryChange(t.id, cat)}
                     onEditCancel={() => setEditingId(null)}
                     allCategories={allCategories}
                   />
