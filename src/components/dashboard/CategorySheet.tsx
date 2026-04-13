@@ -91,7 +91,7 @@ export function CategorySheet({ category, onClose, allTxs, currentMonth }: Props
   return (
     <>
     <Dialog open={!!category} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] sm:max-h-[85vh] sm:max-w-xl overflow-y-auto">
         <DialogClose onClick={onClose} />
         <DialogHeader>
           <DialogTitle>{category}</DialogTitle>

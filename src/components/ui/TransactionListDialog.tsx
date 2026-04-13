@@ -21,7 +21,7 @@ export function TransactionListDialog({ open, onClose, title, transactions }: Pr
   return (
     <>
       <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-        <DialogContent className="max-w-lg max-h-[85vh] flex flex-col">
+        <DialogContent className="max-h-[90vh] sm:max-h-[85vh] sm:max-w-2xl flex flex-col">
           <DialogClose onClick={onClose} />
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>

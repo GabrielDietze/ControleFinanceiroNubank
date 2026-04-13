@@ -20,7 +20,7 @@ function Dialog({ open, onOpenChange, children }: DialogProps) {
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
       {/* Overlay */}
       <div
         className="absolute inset-0 bg-black/50"
@@ -41,11 +41,18 @@ function DialogContent({
   return (
     <div
       className={cn(
-        'relative z-50 bg-background rounded-lg border shadow-lg p-6 w-full max-w-md mx-4',
+        // Base
+        'relative z-50 bg-background shadow-lg w-full',
+        // Mobile: bottom sheet
+        'rounded-t-2xl border-t border-x p-6 pb-8',
+        // Desktop: centered modal
+        'sm:rounded-xl sm:border sm:mx-4 sm:w-auto sm:min-w-[32rem] sm:max-w-xl sm:pb-6',
         className,
       )}
       onClick={(e) => e.stopPropagation()}
     >
+      {/* Drag handle — visible only on mobile */}
+      <div className="absolute top-2.5 left-1/2 -translate-x-1/2 w-10 h-1 rounded-full bg-muted-foreground/25 sm:hidden" />
       {children}
     </div>
   )

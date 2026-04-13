@@ -31,7 +31,7 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from 'recharts'
-import { TrendingUp, Plus, Trash2, Filter } from 'lucide-react'
+import { TrendingUp, Plus, Trash2, Filter, Calculator } from 'lucide-react'
 import { toast } from 'sonner'
 
 const PRODUCTS = ['RDB', 'CDB', 'LCI', 'LCA', 'Tesouro Direto', 'Fundo', 'Investimento']
@@ -60,6 +60,78 @@ interface IRCalc {
   estimatedIR: number
   netYields: number
   effectiveRate: number
+}
+
+interface SimulationResult {
+  irToPay: number
+  grossYieldPortion: number
+  netReceived: number
+  aliquotaEfetiva: number
+  notEnoughBalance: boolean
+}
+
+// Simula um saque hipotético e calcula o IR que seria cobrado.
+// Processa saques existentes via FIFO antes de aplicar o saque simulado.
+function simulateWithdrawal(
+  records: { date: string; type: string; amount: number }[],
+  withdrawAmount: number,
+  withdrawDate: string,
+): SimulationResult {
+  const apps = records
+    .filter((r) => r.type === 'application')
+    .sort((a, b) => a.date.localeCompare(b.date))
+  const existingWds = records
+    .filter((r) => r.type === 'withdrawal')
+    .sort((a, b) => a.date.localeCompare(b.date))
+  const grossYields = records
+    .filter((r) => r.type === 'yield')
+    .reduce((s, r) => s + r.amount, 0)
+  const totalApplied = apps.reduce((s, a) => s + a.amount, 0)
+
+  if (totalApplied === 0) {
+    return { irToPay: 0, grossYieldPortion: 0, netReceived: withdrawAmount, aliquotaEfetiva: 0, notEnoughBalance: false }
+  }
+
+  // Fila FIFO de lotes
+  const lots = apps.map((a) => ({ date: a.date, total: a.amount, remaining: a.amount }))
+
+  // Processa saques já realizados para atualizar os lotes restantes
+  for (const w of existingWds) {
+    let left = w.amount
+    while (left > 0 && lots.length > 0) {
+      const lot = lots[0]
+      const used = Math.min(left, lot.remaining)
+      lot.remaining -= used
+      left -= used
+      if (lot.remaining <= 0) lots.shift()
+    }
+  }
+
+  const availableBalance = lots.reduce((s, l) => s + l.remaining, 0)
+  const notEnoughBalance = withdrawAmount > availableBalance + 0.01
+
+  // Aplica o saque simulado sobre os lotes restantes
+  let irToPay = 0
+  let grossYieldPortion = 0
+  let left = Math.min(withdrawAmount, availableBalance)
+
+  for (const lot of lots) {
+    if (left <= 0) break
+    const used = Math.min(left, lot.remaining)
+    const yieldShare = grossYields * (lot.total / totalApplied) * (used / lot.total)
+    const rate = irRate(daysBetween(lot.date, withdrawDate))
+    grossYieldPortion += yieldShare
+    irToPay += yieldShare * rate
+    left -= used
+  }
+
+  return {
+    irToPay: +irToPay.toFixed(2),
+    grossYieldPortion: +grossYieldPortion.toFixed(2),
+    netReceived: +(withdrawAmount - irToPay).toFixed(2),
+    aliquotaEfetiva: grossYieldPortion > 0 ? irToPay / grossYieldPortion : 0,
+    notEnoughBalance,
+  }
 }
 
 // Calcula IR estimado usando FIFO nos lotes de aplicação.
@@ -129,6 +201,12 @@ export default function InvestmentsPage() {
   const [amount, setAmount] = useState('')
   const [product, setProduct] = useState('Investimento')
   const [saving, setSaving] = useState(false)
+
+  // ── Simulação de saque ──────────────────────────────────────────────────────
+  const [simOpen, setSimOpen] = useState(false)
+  const [simProduct, setSimProduct] = useState('RDB')
+  const [simAmount, setSimAmount] = useState('')
+  const [simDate, setSimDate] = useState(() => new Date().toISOString().slice(0, 10))
 
   // ── Filters ─────────────────────────────────────────────────────────────────
   const [filterYear, setFilterYear] = useState<string>('all')
@@ -256,6 +334,21 @@ export default function InvestmentsPage() {
       .sort((a, b) => b.balance - a.balance)
   }, [filtered, today])
 
+  // ── Produtos com saldo disponível para simulação ────────────────────────────
+  const simEligibleProducts = useMemo(() => {
+    return byProduct
+      .filter((p) => !p.irExempt && p.balance > 0)
+      .map((p) => p.product)
+  }, [byProduct])
+
+  // ── Resultado da simulação ───────────────────────────────────────────────────
+  const simResult = useMemo<SimulationResult | null>(() => {
+    const value = parseFloat(simAmount.replace(',', '.'))
+    if (!simOpen || isNaN(value) || value <= 0 || !simDate) return null
+    const productRecords = investments.filter((i) => i.product === simProduct)
+    return simulateWithdrawal(productRecords, value, simDate)
+  }, [simOpen, simAmount, simDate, simProduct, investments])
+
   // ── Totais de IR ─────────────────────────────────────────────────────────────
   const totalIR = useMemo(
     () => byProduct.reduce((s, p) => s + (p.ir ?? 0), 0),
@@ -301,10 +394,16 @@ export default function InvestmentsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Investimentos</h1>
-        <Button size="sm" onClick={openDialog}>
-          <Plus size={15} className="mr-1" />
-          Registrar rendimento
-        </Button>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={() => setSimOpen(true)}>
+            <Calculator size={15} className="mr-1" />
+            Simular saque
+          </Button>
+          <Button size="sm" onClick={openDialog}>
+            <Plus size={15} className="mr-1" />
+            Registrar rendimento
+          </Button>
+        </div>
       </div>
 
       {/* Filtros */}
@@ -672,6 +771,96 @@ export default function InvestmentsPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Dialog: simulação de saque */}
+      <Dialog open={simOpen} onOpenChange={setSimOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Simular saque</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1">
+              <label className="text-sm font-medium">Produto</label>
+              <Select value={simProduct} onValueChange={setSimProduct}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {(simEligibleProducts.length > 0 ? simEligibleProducts : PRODUCTS.filter((p) => !IR_EXEMPT.has(p))).map((p) => (
+                    <SelectItem key={p} value={p}>{p}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <label className="text-sm font-medium">Valor do saque (R$)</label>
+              <Input
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="0,00"
+                value={simAmount}
+                onChange={(e) => setSimAmount(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-sm font-medium">Data do saque</label>
+              <Input
+                type="date"
+                value={simDate}
+                onChange={(e) => setSimDate(e.target.value)}
+              />
+            </div>
+
+            {/* Resultado */}
+            {simResult && (
+              <div className="rounded-lg border bg-muted/40 p-4 space-y-3">
+                <div className="text-sm font-medium text-muted-foreground mb-1">Resultado da simulação</div>
+
+                {simResult.notEnoughBalance && (
+                  <div className="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded px-3 py-1.5">
+                    Valor superior ao saldo disponível — cálculo feito sobre o saldo existente.
+                  </div>
+                )}
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <div className="text-xs text-muted-foreground">Rendimento atribuído</div>
+                    <div className="text-base font-semibold text-green-600">{formatCurrency(simResult.grossYieldPortion)}</div>
+                    <div className="text-xs text-muted-foreground">parcela do rendimento total</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-muted-foreground">Alíquota efetiva</div>
+                    <div className="text-base font-semibold">
+                      {(simResult.aliquotaEfetiva * 100).toFixed(1)}%
+                    </div>
+                    <div className="text-xs text-muted-foreground">tabela regressiva · FIFO</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-muted-foreground">IR a pagar</div>
+                    <div className="text-base font-semibold text-red-500">−{formatCurrency(simResult.irToPay)}</div>
+                    <div className="text-xs text-muted-foreground">retido na fonte</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-muted-foreground">Valor líquido recebido</div>
+                    <div className="text-base font-semibold text-green-600">{formatCurrency(simResult.netReceived)}</div>
+                    <div className="text-xs text-muted-foreground">após IR</div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {!simResult && simAmount !== '' && (
+              <div className="text-xs text-muted-foreground text-center py-2">
+                Preencha valor e data para ver o resultado.
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSimOpen(false)}>Fechar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Dialog: adicionar rendimento */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

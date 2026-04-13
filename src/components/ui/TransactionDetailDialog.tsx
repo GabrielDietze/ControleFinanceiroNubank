@@ -35,7 +35,7 @@ export function TransactionDetailDialog({ transaction: t, onClose }: Props) {
 
   return (
     <Dialog open={!!t} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-sm">
+      <DialogContent className="sm:max-w-md">
         <DialogClose onClick={onClose} />
         <DialogHeader>
           <DialogTitle className="text-base font-semibold leading-snug pr-6" title={t?.memo}>
