@@ -17,6 +17,8 @@ export const DEFAULT_CATEGORIES = [
   'Viagens',
   'Pets',
   'Telecom',
+  'Pisicologa',
+  'Atlético Mineiro',
   'Salário / Renda',
   'Outros recebimentos',
   'Transferências pessoais',
@@ -141,6 +143,36 @@ export const DEFAULT_CATEGORY_RULES: CategoryRule[] = [
   // Salário
   { id: 'r-sal-1', pattern: 'CBF INDUSTRIA', category: 'Salário / Renda', isRegex: false },
   { id: 'r-sal-2', pattern: 'GABRIEL AUGUSTO DIETZE NOVY', category: 'Salário / Renda', isRegex: false },
+  // Telecom — recargas
+  { id: 'r-tel-6', pattern: 'recarga de celular', category: 'Telecom', isRegex: false },
+  // Transporte — pedágio (CCR/Infopago) e ônibus
+  { id: 'r-transp-8', pattern: 'infopago', category: 'Transporte', isRegex: false },
+  { id: 'r-transp-9', pattern: 'buser', category: 'Transporte', isRegex: false },
+  // Viagens
+  { id: 'r-viag-2', pattern: 'localiza', category: 'Viagens', isRegex: false },
+  { id: 'r-viag-3', pattern: 'latam', category: 'Viagens', isRegex: false },
+  // Compras Online
+  { id: 'r-comp-2', pattern: 'amazon', category: 'Compras Online', isRegex: false },
+  { id: 'r-comp-3', pattern: 'kabum', category: 'Compras Online', isRegex: false },
+  { id: 'r-comp-4', pattern: 'magalupay', category: 'Compras Online', isRegex: false },
+  { id: 'r-comp-5', pattern: 'shpp brasil', category: 'Compras Online', isRegex: false },
+  // Alimentação — estabelecimentos identificados
+  { id: 'r-alim-18', pattern: 'pracadosamores', category: 'Alimentação', isRegex: false },
+  // Entretenimento
+  { id: 'r-ent-7', pattern: 'arena mrv', category: 'Entretenimento', isRegex: false },
+  // Academia / Bem-estar
+  { id: 'r-gym-4', pattern: 'fisia', category: 'Academia / Bem-estar', isRegex: false },
+  // Educação
+  { id: 'r-edu-9', pattern: 'sociedade educacional', category: 'Educação', isRegex: false },
+  { id: 'r-edu-10', pattern: 'luana macintyre', category: 'Educação', isRegex: false },
+  // Transferências para familiar (conta empresarial da mãe)
+  { id: 'r-fam-1', pattern: 'bianca cosmeticos', category: 'Transferências pessoais', isRegex: false },
+  // Pets — veterinário/petshop identificados
+  { id: 'r-pet-5', pattern: 'jamag', category: 'Pets', isRegex: false },
+  // Psicóloga
+  { id: 'r-psi-1', pattern: 'eliatriz', category: 'Pisicologa', isRegex: false },
+  // Atlético Mineiro — ingressos via Okto
+  { id: 'r-atm-1', pattern: 'okto', category: 'Atlético Mineiro', isRegex: false },
 ]
 
 /**
